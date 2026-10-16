@@ -32,7 +32,7 @@ function animate(to){
  raf=requestAnimationFrame(frame);
 }
 function change(e){
- const v=e.target.dataset.var;if(!v)return;pause();const old=experiments[page][v];experiments[page][v]=typeof old==='number'?Number(e.target.value):e.target.value;render(true);
+ const v=e.target.dataset.var;if(!v)return;pause();const old=experiments[page][v];experiments[page][v]=typeof old==='number'?Number(e.target.value):e.target.value;render(!e.target.closest('#panel'));
  if(panelMode==='experiment'&&$('panel').open)$('mobile-readings').innerHTML=renderModel(lessons[page],experiments[page],q()).metrics;
 }
 function action(e){
