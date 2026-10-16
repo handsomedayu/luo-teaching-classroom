@@ -16,5 +16,5 @@ if(!s)grid.innerHTML=data.map(x=>card(x.id+'/',x.name,x.summary,count(x)?count(x
 else if(!g)grid.innerHTML=s.grades.map(x=>card(s.id+'/'+x.id+'/',x.name,x.lessons.length?x.lessons.length+' 章课堂课件':'章节与专题待添加','查看年级目录',icon(s.id))).join('');
 else if(g.lessons.length){grid.classList.add('lesson-grid');grid.innerHTML=g.lessons.map((x,i)=>card(s.id+'/'+g.id+'/'+x.id+'/',x.title,x.pages+' 页 · 分步演示与交互动画'+(x.review?' · 待教师审核':''),'进入课堂',`<span class="chapter-no">第 ${i+1} 章</span>`)).join('')}
 else{grid.className='';grid.innerHTML='<section class="empty" aria-label="课件状态"><h2>课件待添加</h2><p>本年级暂未上线课件。已完成的章节会显示在此处，点击即可进入课堂。</p></section>'}
-document.querySelector('.notice').textContent=g?.lessons.some(x=>x.review)?'第四、第五章使用最新成品，仍待老师教学审核。微观模型用于教学，不代表真实微观影像。':'电脑适合课堂投影；手机打开课件后，建议横屏观看。';
+document.querySelector('.notice').textContent=g?.lessons.some(x=>x.review)?(s.id==='physics'?'十章电学课件为待教师审核样稿。实验采用简化或理想模型；教材版本与海南考纲尚未核实。':'第四、第五章使用最新成品，仍待老师教学审核。微观模型用于教学，不代表真实微观影像。'):'电脑适合课堂投影；手机打开课件后，建议横屏观看。';
 })();

@@ -34,7 +34,68 @@ window.CLASSROOM = [
       {
         "id": "grade-9",
         "name": "九年级",
-        "lessons": []
+        "lessons": [
+          {
+            "id": "electricity-01",
+            "title": "电荷与电现象",
+            "pages": 12,
+            "review": true
+          },
+          {
+            "id": "electricity-02",
+            "title": "电流与电路",
+            "pages": 12,
+            "review": true
+          },
+          {
+            "id": "electricity-03",
+            "title": "串联与并联电路",
+            "pages": 12,
+            "review": true
+          },
+          {
+            "id": "electricity-04",
+            "title": "电流、电压及其测量",
+            "pages": 12,
+            "review": true
+          },
+          {
+            "id": "electricity-05",
+            "title": "电阻与变阻器",
+            "pages": 12,
+            "review": true
+          },
+          {
+            "id": "electricity-06",
+            "title": "欧姆定律",
+            "pages": 14,
+            "review": true
+          },
+          {
+            "id": "electricity-07",
+            "title": "动态电路与故障分析",
+            "pages": 12,
+            "review": true
+          },
+          {
+            "id": "electricity-08",
+            "title": "电能、电功与电功率",
+            "pages": 13,
+            "review": true
+          },
+          {
+            "id": "electricity-09",
+            "title": "焦耳定律与电热",
+            "pages": 12,
+            "review": true
+          },
+          {
+            "id": "electricity-10",
+            "title": "家庭电路与安全用电",
+            "pages": 12,
+            "review": true
+          }
+        ]
       }
     ]
   },
