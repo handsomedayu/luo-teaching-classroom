@@ -1,0 +1,32 @@
+'use strict';
+const fs=require('fs'),path=require('path'),{chromium,webkit}=require('./browser.cjs');const root=path.resolve(__dirname,'../physics/grade-9/electricity-03'),out=path.resolve(__dirname,'../test-results/advanced-circuits');fs.mkdirSync(out,{recursive:true});const url='file:///'+root.replace(/\\/g,'/')+'/index.html',failed=[];let passed=0;function check(x,msg){if(x)passed++;else failed.push(msg);}
+async function run(browser,name,viewport,mobile=false){const c=await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile});await c.route(/^https?:/,r=>r.abort());const p=await c.newPage();p.on('pageerror',e=>failed.push(name+' '+e.message));await p.goto(url);await p.waitForFunction(()=>typeof q==='function'&&lessons.length===34);
+ for(const i of [20,21,22,23,24]){await p.evaluate(i=>goto(i),i);
+  // 学生连线模式：点两个接线柱
+  const terms=await p.locator('[data-action="ac:term"]').count();check(terms>0,name+' wiring terminals '+i);
+  if(terms>=2){await p.locator('[data-action="ac:term"]').first().click();await p.locator('[data-action="ac:term"]').nth(1).click();
+    const uw=await p.evaluate(()=>experiments[page].userWires.length);check(uw===1,name+' student wire placed '+i);}
+  await p.locator('[data-action="ac:wireUndo"]').click();check(await p.evaluate(()=>experiments[page].userWires.length===0),name+' wire undo '+i);
+  // 教师演示模式
+  await p.locator('[data-action="ac:wireMode"]').click();check(await p.evaluate(()=>experiments[page].wireMode==='demo'),name+' demo mode '+i);
+  await p.locator('[data-action="ac:source"]').click();check(await p.evaluate(()=>experiments[page].showTarget),name+' conversion toggle '+i);
+  await p.locator('[data-action="ac:wire"]').click();check(await p.evaluate(()=>modelData.visibleCount===1),name+' conversion first wire '+i);
+  const total=await p.evaluate(()=>modelData.net.edges.length);for(let j=1;j<total;j++)await p.locator('[data-action="ac:wire"]').click();
+  check(await p.evaluate(()=>modelData.visibleCount===modelData.net.edges.length),name+' conversion all wires '+i);
+  if(name==='chrome')await p.screenshot({path:path.join(out,`conversion-${i+1}.png`)});await p.locator('#reset').click();}
+ for(const i of [25,26,27,28,29,30]){await p.evaluate(i=>goto(i),i);const cases=await p.locator('#experiment-controls select').locator('option').count();for(let k=0;k<cases;k++){await p.locator('#experiment-controls select').selectOption(String(k));check(await p.evaluate(()=>(experiments[page].edits||[]).length===0),name+' fresh case '+i+'-'+k);
+  // 点一根导线，选择删除，检查答案
+  const wire=await p.locator('[data-action="ac:inspect"]').first().getAttribute('data-value');
+  await p.locator('[data-action="ac:inspect"]').first().click();
+  const hasDel=await p.locator('[data-action="ac:editOp"][data-value="delWire"]').count();
+  if(hasDel){await p.locator('[data-action="ac:editOp"][data-value="delWire"]').click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' edit applied '+i+'-'+k);}
+  await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>typeof experiments[page].editMsg==='string'&&experiments[page].editMsg.length>0),name+' check feedback '+i+'-'+k);
+  await p.locator('[data-action="ac:undoEdit"]').click();check(await p.evaluate(()=>experiments[page].edits.length===0),name+' undo edit '+i+'-'+k);
+  await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.ac-compare svg').count()===2,name+' before-after '+i+'-'+k);
+  check(await p.evaluate(()=>modelData.net.edges.length>0),name+' topology '+i+'-'+k);
+  if(name==='chrome'&&k===0)await p.screenshot({path:path.join(out,`correction-${i+1}.png`)});await p.locator('#reset').click();}}
+ await p.evaluate(()=>goto(19));for(const id of ['S3','S4']){await p.locator(`[data-action="ac:toggle"][data-value="${id}"]`).click();const data=await p.evaluate(()=>modelData);check(id==='S3'?!data.lit.L3:data.sourceShort,name+' '+id+' response');await p.locator('#reset').click();}
+ await p.evaluate(()=>{goto(12);state[page]=2;render();});check(await p.locator('.ac-flow').first().evaluate(e=>getComputedStyle(e).animationPlayState)==='paused',name+' path paused at rest');await p.locator('#play').click();await p.waitForTimeout(250);check(await p.locator('.ac-flow').first().evaluate(e=>getComputedStyle(e).animationPlayState)==='running',name+' path running');await p.locator('#play').click();const paused=await p.evaluate(()=>q());await p.waitForTimeout(350);check(await p.evaluate(x=>q()===x,paused),name+' pause');check(await p.locator('.ac-flow').first().evaluate(e=>getComputedStyle(e).animationPlayState)==='paused',name+' path paused');await p.locator('#play').click();await p.waitForTimeout(1800);check(await p.evaluate(()=>q()===3&&!playing),name+' resume');await p.locator('#reset').click();check(await p.evaluate(()=>q()===0),name+' replay');
+ if(mobile){const touch=async sel=>{const b=await p.locator(sel).first().boundingBox();await p.touchscreen.tap(b.x+b.width/2,b.y+b.height/2);};await p.evaluate(()=>goto(14));await touch('[data-action="ac:toggle"][data-value="S1"]');check(await p.evaluate(()=>experiments[page].switches.S1===false),name+' actual touch switch');await touch('[data-component="A1"]');check(await p.evaluate(()=>experiments[page].selected==='A1'),name+' actual touch meter');await touch('#mobile-experiment');check(await p.locator('#panel').evaluate(e=>e.open),name+' touch controls panel');await touch('#close-panel');await touch('#toc');check(await p.locator('#panel').evaluate(e=>e.open),name+' touch toc');await touch('#close-panel');await p.setViewportSize({width:390,height:844});check(await p.evaluate(()=>document.documentElement.scrollWidth<=390),name+' portrait width');}
+ await c.close();}
+(async()=>{const chrome=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});try{await run(chrome,'chrome',{width:1366,height:768});}finally{await chrome.close();}if(process.env.ADVANCED_WEBKIT){const wk=await webkit.launch({headless:true});try{await run(wk,'webkit',{width:844,height:390},true);}finally{await wk.close();}}const result={passed,failed:failed.length,details:failed};fs.writeFileSync(path.join(out,'interactions-results.json'),JSON.stringify(result,null,2));console.log(result);if(failed.length)process.exitCode=1;})().catch(e=>{console.error(e);process.exitCode=1;});

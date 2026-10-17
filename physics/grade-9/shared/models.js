@@ -34,7 +34,7 @@ const stats=items=>`<div class="readings">${items.map(([k,v])=>`<span>${k}<b>${v
 const range=(key,label,value,min,max,step=1)=>`<label class="slider-label">${label}<input aria-label="${label}" data-var="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${value}"></label>`;
 const button=(key,label,val)=>`<button data-action="${key}"${val!==undefined?` data-value="${val}"`:''}>${label}</button>`;
 const select=(key,label,value,items)=>`<label>${label} <select aria-label="${label}" data-var="${key}">${items.map(([v,t])=>`<option value="${v}" ${v===value?'selected':''}>${t}</option>`).join('')}</select></label>`;
-function initial(p){return {U:6,r1:10,r2:p.scene==='safety'?10:20,mode:p.mode||'series',closed:true,b1:true,b2:true,fault:p.initialFault||'normal',pos:.5,terminal:p.terminal||'AC',range:p.kind==='A'?.6:3,ticks:18,charge:-1,length:1,area:1,ohmR:10,rp:10,lampU:2.5,load:0,...p.initial};}
+function initial(p){if(p.scene==='advanced-circuit')return AdvancedCircuits.initial(p);return {U:6,r1:10,r2:p.scene==='safety'?10:20,mode:p.mode||'series',closed:true,b1:true,b2:true,fault:p.initialFault||'normal',pos:.5,terminal:p.terminal||'AC',range:p.kind==='A'?.6:3,ticks:18,charge:-1,length:1,area:1,ohmR:10,rp:10,lampU:2.5,load:0,...p.initial};}
 function circuitNetwork(s){
  const parallel=s.mode==='parallel',single=s.mode==='single',branches=[];
  const add=(id,from,to,kind,value,route)=>branches.push({id,from,to,kind,value,route});
@@ -105,6 +105,7 @@ function circuitScene(p,s,q){
 function renderModel(p,s,q){
  let result={picture:'',controls:'',metrics:'',caption:'',data:{}};const stage=Math.min(q/3,1);
  switch(p.scene){
+ case 'advanced-circuit':return AdvancedCircuits.render(p,s,q);
  case 'circuit':return circuitScene(p,s,q);
  case 'concept':result.picture='<div class="concept-flow">'+p.labels.map((t,i)=>`<div class="concept-tile ${q>=i+1?'lit':''}"><small>0${i+1}</small><b>${t}</b></div>`).join('')+'</div>';break;
  case 'charge':{

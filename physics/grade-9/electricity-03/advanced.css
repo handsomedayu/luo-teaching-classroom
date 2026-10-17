@@ -1,0 +1,18 @@
+.visual:has([data-component]) #visual-picture{height:230px}.visual:has([data-component]) #caption{font-size:18px;line-height:1.25}.visual:has([data-component]) .experiment-controls button,.visual:has([data-component]) .experiment-controls select{font-size:19px}#visual-picture:has(.ac-compare){height:250px}.ac-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;height:100%;width:100%;align-items:center}.ac-compare>div{min-width:0;text-align:center;font-size:18px}.ac-compare svg{width:100%;height:210px;display:block}.ac-flow{stroke-dasharray:12 8;animation:ac-flow .8s linear infinite}.ac-pulse{animation:ac-pulse 1s ease-in-out infinite alternate}.ac-flow,.ac-pulse{animation-play-state:paused}.is-playing .ac-flow,.is-playing .ac-pulse{animation-play-state:running}@keyframes ac-flow{to{stroke-dashoffset:-20}}@keyframes ac-pulse{to{opacity:.35}}@media(prefers-reduced-motion:reduce){.ac-flow,.ac-pulse{animation:none}}
+/* V3.1 整改：交互连线/改错消息与投屏大按钮 */
+.wire-msg,.edit-msg{margin:8px 0;padding:10px 14px;border-radius:8px;font-size:17px;line-height:1.5;background:#fef3e2;border:2px solid #e8a838;color:#7a4a00}
+.edit-msg.ok{background:#e6f4ea;border-color:#2e7d32;color:#1b5e20}
+.wire-progress{display:inline-block;margin:0 8px;padding:8px 12px;background:#e3f2fd;border-radius:8px;font-size:17px;font-weight:bold}
+.edit-hint{margin:8px 0;padding:10px 14px;background:#e8f5e9;border-radius:8px;font-size:17px;line-height:1.5}
+.edit-ops{margin:8px 0;padding:10px 14px;background:#fff3e0;border-radius:8px;font-size:17px}
+.edit-ops button{margin:0 4px}
+/* 投屏：按钮更大，方便点击 */
+.experiment-controls button{font-size:20px;padding:12px 18px;min-height:48px;margin:4px}
+.experiment-controls select{font-size:19px;padding:10px 14px;min-height:48px}
+.term-layer circle{transition:r .15s}
+/* 改错页（26-31）：操作区独立滚动，按钮不被说明/导航遮挡 */
+.visual:has(.ac-fixwrap) #visual-picture{height:200px}
+.visual:has(.ac-fixwrap) #visual-picture:has(.ac-compare){height:220px}
+.visual:has(.ac-fixwrap) .ac-fixwrap{height:100%;width:100%}
+.visual:has(.ac-fixwrap) .ac-compare svg{height:180px}
+.visual:has(.ac-fixwrap) #experiment-controls{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;align-content:flex-start;scrollbar-gutter:stable}
