@@ -407,7 +407,7 @@ const AdvancedCircuits=(()=>{
      case 'ammeterParallel':
        if(res.sourceShort)return fail('仍危险：有表直接跨接在电源两极，近似电源短路。');
        if(!E('A错'))return fail('A错不见了，请点“重置”后重试。');
-       if(!inSeries('A错','L2'))return fail('A错还没有串联在 L2 支路中（两者电流不相等）。');
+       if(!inSeries('A错','L2'))return fail('A错还未正确接入 L2 支路；请根据接线节点和支路通路检查，不能仅凭电流数值判断串联。');
        return pass('正确：A错已串联接入 L2 支路，电源短路解除。');
      case 'voltmeterSeries':
        if(Math.abs(res.total)<1e-6)return fail('电路仍不通：V错还串在干路里（理想电压表内阻很大）。');

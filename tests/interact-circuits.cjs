@@ -142,10 +142,29 @@ for(const [c,fn] of Object.entries(goodEdits)){
   assert(A.inSeriesTopo(net,'A错','L1'),'A错与L1拓扑串联');ok('inSeriesTopo 同支路为真');
   assert(!A.inSeriesTopo(net,'A错','L2'),'A错与L2非串联');ok('inSeriesTopo 并联为假');
 }
-// 对称零电流：电桥平衡时电流为零，保守判否
+// 对称零电流：断开开关，电流为零，保守判否
 {
-  const net=A.series({});const res=A.solve(net,net.switches||{});
-  assert(!A.inSeriesTopo(net,'A₀','L1')||res.current['A₀']!==0,'零电流保守处理');ok('零电流保守判否');
+  const net=A.series({switchOpen:true});const res=A.solve(net,net.switches||{});
+  assert(Math.abs(res.current['A₀']||0)<1e-9,'开关断开应无电流');
+  assert(!A.inSeriesTopo(net,'A₀','L1'),'零电流时保守判否');ok('零电流保守判否');
+  assert(A.seriesLoadsTopo(net,'A₀').length===0,'零电流时无测量对象');ok('零电流无测量对象');
+}
+// 反向电流：调换电流表端点，读数为负，但串联判定不变
+{
+  const net=A.series({});const a0=net.edges.find(e=>e.id==='A₀');
+  const tmp=a0.a;a0.a=a0.b;a0.b=tmp; // 交换端点
+  const res=A.solve(net,net.switches||{});
+  assert(res.current['A₀']<0,'反接后端点电流为负');
+  assert(A.inSeriesTopo(net,'A₀','L1'),'反向电流不改变串联判定');ok('反向电流串联判定不变');
+}
+// 干路/支路分辨：parallel2 中 A₀ 测干路，A1 只测 L1 支路
+{
+  const p0=pages[0],s0=A.initial(p0);const net=A.make(p0,s0);
+  const dm0=A.describeMeasure(net,A.solve(net,net.switches||{}),'A₀');
+  assert(dm0.series.includes('L1')&&dm0.series.includes('L2'),'干路表测到两支路');ok('干路表测量包含两支路');
+  assert(!A.inSeriesTopo(net,'A₀','L1'),'干路表与支路非严格串联');ok('干路/支路严格串联区分');
+  const dm1=A.describeMeasure(net,A.solve(net,net.switches||{}),'A1');
+  assert(dm1.series.includes('L1')&&!dm1.series.includes('L2'),'支路表只测本支路');ok('支路表只测本支路');
 }
 // 真串联：series() 中 A₀ 与 L1、L2 均串联
 {
