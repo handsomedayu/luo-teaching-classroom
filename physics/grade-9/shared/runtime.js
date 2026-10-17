@@ -66,7 +66,7 @@ function change(e){
 }
 function action(e){
  const b=e.target.closest('[data-action]');if(!b)return;flushInput();pause();const k=b.dataset.action,s=experiments[page];
- if(lessons[page].scene==='advanced-circuit')AdvancedCircuits.action(s,k,b.dataset.value);
+ if(lessons[page].scene==='advanced-circuit')AdvancedCircuits.action(s,k,b.dataset.value,lessons[page]);
  else if(k==='record'){const m=renderModel(lessons[page],s,q()).data;s.feedback=!s.closed?'请先闭合开关。':lessons[page].mode==='resistance'&&Math.abs(m.U-3)>.01?'先把 U₁ 调回 3 V，再记录比较。':'';if(!s.feedback){s.records=[...(s.records||[]),{U:m.U,I:m.I,R:m.R}].slice(-3);}}else if(k==='mode')s.mode=s.mode==='series'?'parallel':'series';else if(k==='charge')s.charge*=-1;else if(k==='load')s.load=(s.load+1)%3;else s[k]=!s[k];render();
  if(panelMode==='experiment'&&$('panel').open)openPanel('experiment');
 }

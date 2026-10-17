@@ -22,7 +22,7 @@ assert.strictEqual(pages.length,22);const page=c=>pages.find(p=>p.config===c);co
  const s=model('localShort').result;near(s.total,.6);near(s.current.L2,0);assert(s.lit.L1);
 }
 for(let i=0;i<5;i++){const r=model('stateCompare',{acCase:i}).result;assert.strictEqual(r.sourceShort,i===4);if(i===1||i===2)near(r.total,0);if(i===3)near(r.total,.6);}
-for(const p of pages){const s=A.initial(p);for(let i=0;i<(p.cases?.length||1);i++){s.acCase=i;for(const fixed of [false,true]){s.fixed=fixed;const net=A.make(p,s),r=A.solve(net,net.switches),shown=A.render(p,s,3);assert(shown.picture.includes('<svg')&&!shown.picture.includes('NaN'));assert.strictEqual(r.sourceShort,shown.data.sourceShort);}}}
+for(const p of pages){const s=A.initial(p);for(let i=0;i<(p.cases?.length||1);i++){s.acCase=i;for(const fixed of [false,true]){s.fixed=fixed;const net=A.make(p,s),r=A.solve(net,net.switches),shown=A.render(p,s,3);assert(shown.picture.includes('<svg')&&!shown.picture.includes('NaN'));const expNet=p.task==='error'?A.applyEdits(A.make(p,{...s,fixed:false}),s.edits||[]):net;assert.strictEqual(A.solve(expNet,expNet.switches||{}).sourceShort,shown.data.sourceShort);}}}
 {
  const p=page('oneMove'),bad=A.make(p,{...A.initial(p),fixed:false}),good=A.make(p,{...A.initial(p),fixed:true}),b=bad.edges.find(e=>e.id==='V₁'),g=good.edges.find(e=>e.id==='V₁');assert.notStrictEqual(b.a,g.a);assert.strictEqual(b.b,g.b);
  const p2=page('oneDelete'),n1=A.make(p2,{...A.initial(p2),fixed:false}),n2=A.make(p2,{...A.initial(p2),fixed:true});assert.strictEqual(n1.edges.filter(e=>e.id==='旁路线').length-n2.edges.filter(e=>e.id==='旁路线').length,1);
