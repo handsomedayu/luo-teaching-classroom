@@ -22,13 +22,14 @@ const choices=items=>`<div class="choice-row">${items.map((s,i)=>`<button data-c
 const flow=labels=>`<div class="phase-row">${labels.map((s,i)=>`<span class="${q()>=i+1?'active':''}">${i+1} ${s}</span>`).join('')}</div>`;
 function solvePage(items){const d=items[pick()];return choices(items.map(x=>x.formula))+`<div class="lesson-work">${split(visual(`<div class="formula-large">${f(d.formula)}</div><p class="caption">求 ${d.unknown} 的化合价</p><p class="big teal ${q()>=4?'':'pending'}" data-result="${d.result}">${d.result}</p>`),`<div class="calculation">${facts(d.steps)}</div>`)}</div>`}
 function dot(x,y,shell,bound=true,transfer=false){return `<g class="electron ${transfer?'transfer':''}" data-shell="${shell}" data-bound="${bound}" transform="translate(${x} ${y})"><circle r="12"/><text y="-1">−</text></g>`}
+function particlePositions(type,t){const sodium=type==='Na',cx=225,cy=210,points=[]; for(let i=0;i<(sodium?1:2);i++){let a=(6+i)*Math.PI/4,start=sodium?[cx+166,cy]:[525+i*35,75+i*135],end=sodium?[555,85]:[cx+116*Math.cos(a),cy+116*Math.sin(a)],v=Math.max(0,Math.min(1,t-i)),u=v*v*(3-2*v),x=start[0]+(end[0]-start[0])*u,y=start[1]+(end[1]-start[1])*u-45*Math.sin(Math.PI*u),bound=sodium?v===0:v===1;
+ points.push({x,y,shell:bound?(sodium?3:2):'transfer',bound})}return points;}
 function particles(type,t){
  const sodium=type==='Na',z=sodium?11:8,layers=sodium?[2,8,1]:[2,6],cx=225,cy=210,radii=[62,116,166];
  let svg=`<svg class="particle" data-z="${z}" viewBox="0 0 620 430" role="img" aria-label="${sodium?'钠失去1个':'氧得到2个'}电子的过程模型，原子核保持+${z}不变">`;
  layers.forEach((n,l)=>{if(!sodium||l!==2||t<1)svg+=`<circle class="ring" cx="${cx}" cy="${cy}" r="${radii[l]}" data-layer="${l+1}"/>`;for(let i=0;i<n;i++){if(sodium&&l===2)continue;let a=l===0?(-Math.PI/2+i*Math.PI):i*Math.PI/4;svg+=dot(cx+radii[l]*Math.cos(a),cy+radii[l]*Math.sin(a),l+1)}});
  svg+=`<circle class="nucleus" cx="${cx}" cy="${cy}" r="31"/><text class="nucleus-label" x="${cx}" y="${cy+10}">+${z}</text>`;
- for(let i=0;i<(sodium?1:2);i++){let a=(6+i)*Math.PI/4,start=sodium?[cx+166,cy]:[525+i*35,75+i*135],end=sodium?[555,85]:[cx+116*Math.cos(a),cy+116*Math.sin(a)],v=Math.max(0,Math.min(1,t-i)),u=v*v*(3-2*v),x=start[0]+(end[0]-start[0])*u,y=start[1]+(end[1]-start[1])*u-45*Math.sin(Math.PI*u),bound=sodium?v===0:v===1;
- svg+=dot(x,y,bound?(sodium?3:2):'transfer',bound,true)}
+ for(const e of particlePositions(type,t))svg+=dot(e.x,e.y,e.shell,e.bound,true);
  svg+=`<text x="452" y="340" font-size="25" fill="#a04c14">${sodium?'移出的电子':'外来电子'}</text><text x="452" y="374" font-size="22" fill="#526972">路径仅为示意</text></svg>`;return svg;
 }
 const atomStyles={H:[17,'#edf7f5','#096f70'],O:[26,'#fff0e6','#a04c14'],C:[23,'#e5eaed','#18343f'],Fe:[25,'#e5eaed','#526972'],Cu:[25,'#fff0e6','#a04c14'],He:[22,'#edf7f5','#096f70'],Ne:[22,'#edf7f5','#096f70'],Ar:[22,'#edf7f5','#096f70']};
@@ -76,17 +77,19 @@ const lessons=[
 ];
 const state=Array(lessons.length).fill(0),responses=Object.fromEntries(lessons.flatMap((l,i)=>l.quiz||l.memory?[[i,Array(l.steps).fill(false)]]:[]));
 function render(){
- const lesson=lessons[page];$('#section').textContent=`第四章 / ${lesson.section}`;$('#title').textContent=lesson.title;$('#question').textContent=lesson.question;
- $('#content').innerHTML=`<section class="page" data-page="${page+1}">${lesson.render()}</section>`;$('#model-note').textContent=lesson.note||'课堂约定：先观察、再解释；点击揭示结论，可随时回退或查看讲解提示。';sync();
+ const lesson=lessons[page];ClassroomDOM.text($('#section'),`第四章 / ${lesson.section}`);ClassroomDOM.text($('#title'),lesson.title);ClassroomDOM.text($('#question'),lesson.question);
+ ClassroomDOM.html($('#content'),`<section class="page" data-page="${page+1}">${lesson.render()}</section>`);ClassroomDOM.text($('#model-note'),lesson.note||'课堂约定：先观察、再解释；点击揭示结论，可随时回退或查看讲解提示。');sync();
 }
+let lastSync='';
 function sync(){
+ const signature=[page,Math.floor(q()),playing].join(':');if(playing&&signature===lastSync)return;lastSync=signature;
  const lesson=lessons[page],n=(lessons[page].quiz||lessons[page].memory)?responses[page].filter(Boolean).length:q();
  $('#back').disabled=n===0&&!playing;$('#step').disabled=n>=lesson.steps||playing;$('#step').textContent=lesson.animation?'逐步播放':(lessons[page].quiz||lessons[page].memory)?'揭示下一题':'逐步揭示';
  $('#play').hidden=!lesson.animation;$('#play').disabled=n===lesson.steps&&!playing;$('#play').textContent=playing?'暂停':'连续播放';
- $('#prev').disabled=page===0;$('#next').disabled=page===lessons.length-1;$('#page-count').textContent=`${String(page+1).padStart(2,'0')} / ${lessons.length}`;$('#step-count').textContent=`${Math.floor(n)} / ${lesson.steps}`;$('#progress').style.width=(page+1)/lessons.length*100+'%';
+ $('#prev').disabled=page===0;$('#next').disabled=page===lessons.length-1;ClassroomDOM.text($('#page-count'),`${String(page+1).padStart(2,'0')} / ${lessons.length}`);ClassroomDOM.text($('#step-count'),`${Math.floor(n)} / ${lesson.steps}`);$('#progress').style.width=(page+1)/lessons.length*100+'%';
 }
 function pause(){playing=false;cancelAnimationFrame(raf);sync()}
-function animate(to){target=to;playing=true;last=performance.now();sync();function frame(now){state[page]=Math.min(target,q()+(now-last)/2000);last=now;if(q()===target)playing=false;render();if(playing)raf=requestAnimationFrame(frame)}raf=requestAnimationFrame(frame)}
+function animate(to){target=to;playing=true;last=performance.now();sync();function frame(now){state[page]=Math.min(target,q()+Math.max(0,Math.min(now-last,100))/2000);last=now;if(q()===target)playing=false;render();if(playing)raf=requestAnimationFrame(frame)}raf=requestAnimationFrame(frame)}
 function step(){if(lessons[page].animation){if(!playing&&q()<lessons[page].steps)animate(Math.min(lessons[page].steps,Math.floor(q())+1))}else if((lessons[page].quiz||lessons[page].memory)){let i=responses[page].indexOf(false);if(i>=0)responses[page][i]=true;render()}else{state[page]=Math.min(lessons[page].steps,q()+1);render()}}
 function back(){pause();if((lessons[page].quiz||lessons[page].memory)){let i=responses[page].lastIndexOf(true);if(i>=0)responses[page][i]=false}else state[page]=Math.max(0,Math.ceil(q())-1);render()}
 function reset(){pause();state[page]=0;if((lessons[page].quiz||lessons[page].memory))responses[page].fill(false);render()}

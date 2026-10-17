@@ -3,3 +3,5 @@
 
 .visual{min-height:0}#visual-picture{height:260px}.visual:has(.diagram-caption) #visual-picture{height:245px}.visual:has(.direction) #visual-picture{height:280px}
 .visual:has(#experiment-controls:empty) #visual-picture:not(:has(.concept-flow)){height:310px}
+
+.visual:has([data-action="record"]) #visual-picture{height:215px}#caption,#readings,.experiment-controls{flex-shrink:0}

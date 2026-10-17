@@ -26,12 +26,13 @@ const formalNote='教材式结构示意图：弧线表示电子层，层上数�
 const transferNote='电子转移过程模型：圆圈不是固定运动轨道，移动路径和逐个计数快照不代表真实反应机理。';
 const processes={Mg:{to:'Mg2+',count:2,lose:true},Cl:{to:'Cl-',count:1,lose:false}};
 function dot(x,y,shell,bound=true,transfer=false){return `<g class="electron ${transfer?'transfer':''}" data-shell="${shell}" data-bound="${bound}" transform="translate(${x} ${y})"><circle r="12"/><text y="-1">−</text></g>`}
+function particlePositions(type,t){const p=processes[type],cx=225,cy=210,points=[]; for(let i=0;i<p.count;i++){const a=p.lose?(-Math.PI/4+i*Math.PI/2):7*Math.PI/4,outer=[cx+166*Math.cos(a),cy+166*Math.sin(a)],outside=[560,75+i*245],start=p.lose?outer:outside,end=p.lose?outside:outer,v=Math.max(0,Math.min(1,t-i)),u=v*v*(3-2*v),bound=p.lose?v===0:v===1;points.push({x:start[0]+(end[0]-start[0])*u,y:start[1]+(end[1]-start[1])*u-25*Math.sin(Math.PI*u),shell:bound?3:'transfer',bound})}return points;}
 function particles(type,t){
  const s=species[type],p=processes[type],cx=225,cy=210,radii=[62,116,166];
  let svg=`<svg class="particle" viewBox="0 0 620 430" role="img" data-z="${s.z}" data-progress="${t}" aria-label="${s.name}${p.lose?'失去':'得到'}${p.count}个电子的过程模型，原子核保持+${s.z}不变">`;
  s.layers.forEach((count,l)=>{if(!p.lose||l!==2||t<p.count)svg+=`<circle class="ring" cx="${cx}" cy="${cy}" r="${radii[l]}" data-layer="${l+1}"/>`;for(let i=0;i<count;i++){if(p.lose&&l===2)continue;let a=l===0?-Math.PI/2+i*Math.PI:i*Math.PI/4;svg+=dot(cx+radii[l]*Math.cos(a),cy+radii[l]*Math.sin(a),l+1)}});
  svg+=`<circle class="nucleus" cx="${cx}" cy="${cy}" r="31"/><text class="nucleus-label" x="${cx}" y="${cy+10}">+${s.z}</text>`;
- for(let i=0;i<p.count;i++){const a=p.lose?(-Math.PI/4+i*Math.PI/2):7*Math.PI/4,outer=[cx+166*Math.cos(a),cy+166*Math.sin(a)],outside=[560,75+i*245],start=p.lose?outer:outside,end=p.lose?outside:outer,v=Math.max(0,Math.min(1,t-i)),u=v*v*(3-2*v),bound=p.lose?v===0:v===1;svg+=dot(start[0]+(end[0]-start[0])*u,start[1]+(end[1]-start[1])*u-25*Math.sin(Math.PI*u),bound?3:'transfer',bound,true)}
+ for(const e of particlePositions(type,t))svg+=dot(e.x,e.y,e.shell,e.bound,true);
  return svg+`<text x="446" y="370" font-size="24" fill="#a04c14">${p.lose?'移出的电子':'外来电子'}</text><text x="446" y="404" font-size="21" fill="#526972">路径仅为示意</text></svg>`;
 }
 function transferPage(type){
@@ -69,17 +70,19 @@ const lessons=[
 ];
 const state=Array(lessons.length).fill(0),responses=Object.fromEntries(lessons.flatMap((l,i)=>l.quiz?[[i,Array(l.steps).fill(false)]]:[]));
 function render(){
- const lesson=lessons[page];$('#section').textContent=`第二章 / ${lesson.section}`;$('#title').textContent=lesson.title;$('#question').textContent=lesson.question;
- $('#content').innerHTML=`<section class="page" data-page="${page+1}">${lesson.render()}</section>`;$('#model-note').textContent=lesson.note||'课堂约定：先观察、再解释；点击揭示结论，可随时回退或查看讲解提示。';sync();
+ const lesson=lessons[page];ClassroomDOM.text($('#section'),`第二章 / ${lesson.section}`);ClassroomDOM.text($('#title'),lesson.title);ClassroomDOM.text($('#question'),lesson.question);
+ ClassroomDOM.html($('#content'),`<section class="page" data-page="${page+1}">${lesson.render()}</section>`);ClassroomDOM.text($('#model-note'),lesson.note||'课堂约定：先观察、再解释；点击揭示结论，可随时回退或查看讲解提示。');sync();
 }
+let lastSync='';
 function sync(){
+ const signature=[page,Math.floor(q()),playing].join(':');if(playing&&signature===lastSync)return;lastSync=signature;
  const lesson=lessons[page],n=lessons[page].quiz?responses[page].filter(Boolean).length:q();
  $('#back').disabled=n===0&&!playing;$('#step').disabled=n>=lesson.steps||playing;$('#step').textContent=lesson.animation?'逐步播放':lessons[page].quiz?'揭示下一题':'逐步揭示';
  $('#play').hidden=!lesson.animation;$('#play').disabled=n===lesson.steps&&!playing;$('#play').textContent=playing?'暂停':'连续播放';
- $('#prev').disabled=page===0;$('#next').disabled=page===lessons.length-1;$('#page-count').textContent=`${String(page+1).padStart(2,'0')} / ${lessons.length}`;$('#step-count').textContent=`${Math.floor(n)} / ${lesson.steps}`;$('#progress').style.width=(page+1)/lessons.length*100+'%';
+ $('#prev').disabled=page===0;$('#next').disabled=page===lessons.length-1;ClassroomDOM.text($('#page-count'),`${String(page+1).padStart(2,'0')} / ${lessons.length}`);ClassroomDOM.text($('#step-count'),`${Math.floor(n)} / ${lesson.steps}`);$('#progress').style.width=(page+1)/lessons.length*100+'%';
 }
 function pause(){playing=false;cancelAnimationFrame(raf);sync()}
-function animate(to){target=to;playing=true;last=performance.now();sync();function frame(now){state[page]=Math.min(target,q()+(now-last)/2000);last=now;if(q()===target)playing=false;render();if(playing)raf=requestAnimationFrame(frame)}raf=requestAnimationFrame(frame)}
+function animate(to){target=to;playing=true;last=performance.now();sync();function frame(now){state[page]=Math.min(target,q()+Math.max(0,Math.min(now-last,100))/2000);last=now;if(q()===target)playing=false;render();if(playing)raf=requestAnimationFrame(frame)}raf=requestAnimationFrame(frame)}
 function step(){if(lessons[page].animation){if(!playing&&q()<lessons[page].steps)animate(Math.min(lessons[page].steps,Math.floor(q())+1))}else if(lessons[page].quiz){let i=responses[page].indexOf(false);if(i>=0)responses[page][i]=true;render()}else{state[page]=Math.min(lessons[page].steps,q()+1);render()}}
 function back(){pause();if(lessons[page].quiz){let i=responses[page].lastIndexOf(true);if(i>=0)responses[page][i]=false}else state[page]=Math.max(0,Math.ceil(q())-1);render()}
 function reset(){pause();state[page]=0;if(lessons[page].quiz)responses[page].fill(false);render()}
