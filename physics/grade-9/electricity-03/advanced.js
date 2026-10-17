@@ -637,7 +637,7 @@ const AdvancedCircuits=(()=>{
    if(!op){s.pendingOp=null;s.editMsg='';return;}
    const sel=s.selected;
    if(!sel){s.editMsg='请先点击选择一根导线或一个元件。';return;}
-   if(!rules.ops.includes(op)){s.editMsg='本题不允许这种操作。';return;}
+   if(!(rules.ops.includes(op)||(['moveA','moveB'].includes(op)&&rules.ops.includes('moveEnd')))){s.editMsg='本题不允许这种操作。';return;}
    const net=applyEdits(make(p,{...s,fixed:false}),s.edits||[]);
    const e=net.edges.find(x=>x.id===sel);
    if(!e){s.editMsg='所选目标不存在，请重选。';s.selected=null;return;}

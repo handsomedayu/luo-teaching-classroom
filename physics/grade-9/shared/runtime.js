@@ -61,7 +61,7 @@ function animate(to){
 }
 function change(e){
  const v=e.target.dataset.var;if(!v)return;pause();experiments[page].feedback='';const old=experiments[page][v];experiments[page][v]=typeof old==='number'?Number(e.target.value):e.target.value;
- if(lessons[page].scene==='advanced-circuit'&&v==='acCase')Object.assign(experiments[page],{selected:'',guess:'',fixed:false});
+ if(lessons[page].scene==='advanced-circuit'&&v==='acCase')Object.assign(experiments[page],{selected:'',guess:'',fixed:false,edits:[],editMsg:'',editOk:false,editDone:false,showParse:false,showStd:false,pendingOp:null});
  if(e.target.type==='range'){if(!inputRaf)inputRaf=requestAnimationFrame(()=>{inputRaf=0;render();});}else{flushInput();render();}
 }
 function action(e){
