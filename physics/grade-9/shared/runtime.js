@@ -9,6 +9,7 @@ const setText=(id,text)=>{if($(id).textContent!==text)$(id).textContent=text;};
 const notes='本课为待教师审核样稿。教材版次及海南中考逐条要求未核实。电路采用理想电源、导线与电表；定值电阻温度不变。动画不代表真实电子速度。';
 function teacherFlow(p){
  const flows={
+  'advanced-circuit':'设置题目与开关 → 学生预测 → 点击电表或错误位置 → 分步标节点、亮路径 → 核对读数/改线 → 归纳适用条件；电源短路仅作屏幕模拟',
   charge:'设定接触条件 → 预测两物体电性 → 播放电子转移 → 核对净电荷守恒 → 说明只转移电子、份额为示意',
   scope:'选接触体电性 → 预测箔片变化 → 从初态逐步演示 → 分析同种电荷排斥 → 说明张角不能定量读电荷',
   circuit:'先设开关和电阻 → 预测各支路通断与读数 → 操作并观察路径 → 按节点和电表接法分析 → 归纳理想电路适用条件',
@@ -24,7 +25,7 @@ function teacherFlow(p){
 }
 function pause(){playing=false;cancelAnimationFrame(raf);sync();}
 function sync(){
- const n=lessons[page].steps.length,key=[page,Math.floor(q()),q()===0,q()>=n,playing].join(':');if(key===syncKey)return;syncKey=key;
+ const n=lessons[page].steps.length,key=[page,Math.floor(q()),q()===0,q()>=n,playing].join(':');if(key===syncKey)return;syncKey=key;$('stage').classList.toggle('is-playing',playing);
  setText('page-count',`${page+1} / ${lessons.length}`);setText('step-count',`${Math.floor(q())} / ${n}`);
  $('prev').disabled=page===0;$('next').disabled=page===lessons.length-1;$('back').disabled=q()===0;$('step').disabled=q()>=n;
  $('play').hidden=false;setText('play',playing?'暂停':'连续播放');$('progress').style.width=`${(page+1)/lessons.length*100}%`;
@@ -60,11 +61,13 @@ function animate(to){
 }
 function change(e){
  const v=e.target.dataset.var;if(!v)return;pause();experiments[page].feedback='';const old=experiments[page][v];experiments[page][v]=typeof old==='number'?Number(e.target.value):e.target.value;
+ if(lessons[page].scene==='advanced-circuit'&&v==='acCase')Object.assign(experiments[page],{selected:'',guess:'',fixed:false});
  if(e.target.type==='range'){if(!inputRaf)inputRaf=requestAnimationFrame(()=>{inputRaf=0;render();});}else{flushInput();render();}
 }
 function action(e){
  const b=e.target.closest('[data-action]');if(!b)return;flushInput();pause();const k=b.dataset.action,s=experiments[page];
- if(k==='record'){const m=renderModel(lessons[page],s,q()).data;s.feedback=!s.closed?'请先闭合开关。':lessons[page].mode==='resistance'&&Math.abs(m.U-3)>.01?'先把 U₁ 调回 3 V，再记录比较。':'';if(!s.feedback){s.records=[...(s.records||[]),{U:m.U,I:m.I,R:m.R}].slice(-3);}}else if(k==='mode')s.mode=s.mode==='series'?'parallel':'series';else if(k==='charge')s.charge*=-1;else if(k==='load')s.load=(s.load+1)%3;else s[k]=!s[k];render();
+ if(lessons[page].scene==='advanced-circuit')AdvancedCircuits.action(s,k,b.dataset.value);
+ else if(k==='record'){const m=renderModel(lessons[page],s,q()).data;s.feedback=!s.closed?'请先闭合开关。':lessons[page].mode==='resistance'&&Math.abs(m.U-3)>.01?'先把 U₁ 调回 3 V，再记录比较。':'';if(!s.feedback){s.records=[...(s.records||[]),{U:m.U,I:m.I,R:m.R}].slice(-3);}}else if(k==='mode')s.mode=s.mode==='series'?'parallel':'series';else if(k==='charge')s.charge*=-1;else if(k==='load')s.load=(s.load+1)%3;else s[k]=!s[k];render();
  if(panelMode==='experiment'&&$('panel').open)openPanel('experiment');
 }
 $('content').addEventListener('input',change);$('content').addEventListener('change',flushInput);$('content').addEventListener('click',action);
