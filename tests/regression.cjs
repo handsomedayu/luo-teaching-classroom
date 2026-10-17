@@ -1,5 +1,5 @@
 const fs=require('fs'),path=require('path'),{chromium,webkit}=require('./browser.cjs');
-const root=path.resolve(__dirname,'../physics/grade-9'),out=path.resolve(__dirname,'../test-results'),chapters=Array.from({length:10},(_,i)=>({id:'electricity-'+String(i+1).padStart(2,'0'),pages:i===5?14:i===7?13:12})).filter((c,i)=>!process.env.PHYSICS_CHAPTERS||process.env.PHYSICS_CHAPTERS.split(',').map(Number).includes(i+1));fs.mkdirSync(out,{recursive:true});
+const root=path.resolve(__dirname,'../physics/grade-9'),out=path.resolve(__dirname,'../test-results'),chapters=Array.from({length:10},(_,i)=>({id:'electricity-'+String(i+1).padStart(2,'0'),pages:i===2?34:i===5?14:i===7?13:12})).filter((c,i)=>!process.env.PHYSICS_CHAPTERS||process.env.PHYSICS_CHAPTERS.split(',').map(Number).includes(i+1));fs.mkdirSync(out,{recursive:true});
 const base=process.env.PHYSICS_BASE||'file:///'+root.replace(/\\/g,'/')+'/';
 const mode=process.env.PHYSICS_MODE||'all',suffix=process.env.PHYSICS_CHAPTERS?'-retest':'';
 const started=new Date().toISOString(),crypto=require('crypto'),sourceHashes=Object.fromEntries(['models.js','runtime.js','style.css'].map(f=>[f,crypto.createHash('sha256').update(fs.readFileSync(root+'/shared/'+f)).digest('hex')]));
