@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-17",
+  "baseline": "de6e6c5bf909b43c36c5d550ddca8ec300cd0340",
+  "physicsPages": 123,
+  "chemistryPages": 105,
+  "passed": 8438,
+  "failed": 0,
+  "suites": [
+    {
+      "suite": "物理桌面1920×1080",
+      "passed": 1372,
+      "failed": 0
+    },
+    {
+      "suite": "物理桌面1366×768",
+      "passed": 1372,
+      "failed": 0
+    },
+    {
+      "suite": "物理Chrome手机横/竖屏",
+      "passed": 203,
+      "failed": 0
+    },
+    {
+      "suite": "物理WebKit手机横/竖屏",
+      "passed": 203,
+      "failed": 0
+    },
+    {
+      "suite": "化学五章桌面及Chrome/WebKit手机",
+      "passed": 2365,
+      "failed": 0
+    },
+    {
+      "suite": "Edge全部228页与HTTP子路径导航/资源",
+      "passed": 347,
+      "failed": 0
+    },
+    {
+      "suite": "物理公式与各页阶段",
+      "passed": 601,
+      "failed": 0
+    },
+    {
+      "suite": "独立节点方程、接线组合与边界",
+      "passed": 935,
+      "failed": 0
+    },
+    {
+      "suite": "动画中途等价、验电器、欧姆记录",
+      "passed": 77,
+      "failed": 0
+    },
+    {
+      "suite": "化学逐状态等价、SVG导线、输入合帧、内存",
+      "passed": 963,
+      "failed": 0
+    }
+  ],
+  "deployment": "未合并、未部署；待教师审核"
+}

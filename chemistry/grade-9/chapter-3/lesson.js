@@ -30,8 +30,9 @@ const initial=[['O',210,115],['H',173,145],['H',247,145],['O',590,115],['H',553,
 const spread=[[330,75],[125,120],[245,255],[470,260],[560,75],[680,245]];
 const product=[[535,175],[155,105],[189,105],[585,175],[155,255],[189,255]];
 const ease=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v)};
+const reactionPositions=t=>initial.map(([k,x,y],i)=>{let a=t<=2?[x,y]:spread[i],b=t<=2?spread[i]:product[i],v=ease(t<=2?t-1:t-2);return [a[0]+(b[0]-a[0])*v,a[1]+(b[1]-a[1])*v]});
 function electrolysis(t){
- const pos=initial.map(([k,x,y],i)=>{let a=t<=2?[x,y]:spread[i],b=t<=2?spread[i]:product[i],v=ease(t<=2?t-1:t-2);return [a[0]+(b[0]-a[0])*v,a[1]+(b[1]-a[1])*v]});
+ const pos=reactionPositions(t);
  const links=(pairs,opacity)=>pairs.map(([a,b])=>`<line class="model-link" opacity="${opacity}" x1="${pos[a][0]}" y1="${pos[a][1]}" x2="${pos[b][0]}" y2="${pos[b][1]}"/>`).join('');
  let body=links([[0,1],[0,2],[3,4],[3,5]],1-ease(t-1))+links([[1,2],[4,5],[0,3]],ease(t-2));
  const draw=i=>atom(initial[i][0],...pos[i],`reaction-${i}`),groups=t<=1?[['H2O',[0,1,2]],['H2O',[3,4,5]]]:t>=3?[['H2',[1,2]],['H2',[4,5]],['O2',[0,3]]]:[['recombining',[0,1,2,3,4,5]]];
@@ -75,17 +76,19 @@ const lessons=[
 ];
 const state=Array(lessons.length).fill(0),responses=Object.fromEntries(lessons.flatMap((l,i)=>l.quiz||l.memory?[[i,Array(l.steps).fill(false)]]:[]));
 function render(){
- const lesson=lessons[page];$('#section').textContent=`第三章 / ${lesson.section}`;$('#title').textContent=lesson.title;$('#question').textContent=lesson.question;
- $('#content').innerHTML=`<section class="page" data-page="${page+1}">${lesson.render()}</section>`;$('#model-note').textContent=lesson.note||'课堂约定：先观察、再解释；点击揭示结论，可随时回退或查看讲解提示。';sync();
+ const lesson=lessons[page];ClassroomDOM.text($('#section'),`第三章 / ${lesson.section}`);ClassroomDOM.text($('#title'),lesson.title);ClassroomDOM.text($('#question'),lesson.question);
+ ClassroomDOM.html($('#content'),`<section class="page" data-page="${page+1}">${lesson.render()}</section>`);ClassroomDOM.text($('#model-note'),lesson.note||'课堂约定：先观察、再解释；点击揭示结论，可随时回退或查看讲解提示。');sync();
 }
+let lastSync='';
 function sync(){
+ const signature=[page,Math.floor(q()),playing].join(':');if(playing&&signature===lastSync)return;lastSync=signature;
  const lesson=lessons[page],n=(lessons[page].quiz||lessons[page].memory)?responses[page].filter(Boolean).length:q();
  $('#back').disabled=n===0&&!playing;$('#step').disabled=n>=lesson.steps||playing;$('#step').textContent=lesson.animation?'逐步播放':(lessons[page].quiz||lessons[page].memory)?'揭示下一题':'逐步揭示';
  $('#play').hidden=!lesson.animation;$('#play').disabled=n===lesson.steps&&!playing;$('#play').textContent=playing?'暂停':'连续播放';
- $('#prev').disabled=page===0;$('#next').disabled=page===lessons.length-1;$('#page-count').textContent=`${String(page+1).padStart(2,'0')} / ${lessons.length}`;$('#step-count').textContent=`${Math.floor(n)} / ${lesson.steps}`;$('#progress').style.width=(page+1)/lessons.length*100+'%';
+ $('#prev').disabled=page===0;$('#next').disabled=page===lessons.length-1;ClassroomDOM.text($('#page-count'),`${String(page+1).padStart(2,'0')} / ${lessons.length}`);ClassroomDOM.text($('#step-count'),`${Math.floor(n)} / ${lesson.steps}`);$('#progress').style.width=(page+1)/lessons.length*100+'%';
 }
 function pause(){playing=false;cancelAnimationFrame(raf);sync()}
-function animate(to){target=to;playing=true;last=performance.now();sync();function frame(now){state[page]=Math.min(target,q()+(now-last)/2000);last=now;if(q()===target)playing=false;render();if(playing)raf=requestAnimationFrame(frame)}raf=requestAnimationFrame(frame)}
+function animate(to){target=to;playing=true;last=performance.now();sync();function frame(now){state[page]=Math.min(target,q()+Math.max(0,Math.min(now-last,100))/2000);last=now;if(q()===target)playing=false;render();if(playing)raf=requestAnimationFrame(frame)}raf=requestAnimationFrame(frame)}
 function step(){if(lessons[page].animation){if(!playing&&q()<lessons[page].steps)animate(Math.min(lessons[page].steps,Math.floor(q())+1))}else if((lessons[page].quiz||lessons[page].memory)){let i=responses[page].indexOf(false);if(i>=0)responses[page][i]=true;render()}else{state[page]=Math.min(lessons[page].steps,q()+1);render()}}
 function back(){pause();if((lessons[page].quiz||lessons[page].memory)){let i=responses[page].lastIndexOf(true);if(i>=0)responses[page][i]=false}else state[page]=Math.max(0,Math.ceil(q())-1);render()}
 function reset(){pause();state[page]=0;if((lessons[page].quiz||lessons[page].memory))responses[page].fill(false);render()}

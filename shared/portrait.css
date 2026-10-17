@@ -1,0 +1,24 @@
+@media (max-width:700px) and (orientation:portrait){
+ html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto;overscroll-behavior:auto}
+ #stage{position:relative;width:100%;height:auto;min-height:100dvh;padding:0 16px 76px;transform:none!important;left:0!important;top:0!important;overflow:visible}
+ header{height:auto;min-height:64px;padding:10px 0 10px 36px;gap:8px;flex-wrap:wrap}
+ .brand{font-size:18px;gap:8px}.brand .mark{width:28px;height:28px;font-size:18px}.brand span{display:none}
+ header .tools{margin-left:auto;gap:6px}header button{font-size:15px;min-height:44px;padding:6px 10px}
+ .heading{padding:18px 0}.eyebrow{font-size:15px;letter-spacing:0}h1{font-size:27px;line-height:1.35}#question{font-size:18px;line-height:1.6}
+ h2,.card h2{font-size:21px}p,.fact,.callout,.caption,.card p,.card .caption{font-size:19px;line-height:1.65}.small,#caption,.ask{font-size:16px}
+ main,.page,.split{height:auto;min-height:0}.split,.split.wide-left,.cards,.cards.two,.cards.four,.mini-pair,.coefficient-cards{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+ .visual{width:100%;height:auto;min-width:0;padding:12px;overflow:hidden;gap:12px}.facts{gap:12px}.fact{padding:8px 0 8px 12px}.facts .pending{display:none}
+ .card{padding:16px;min-width:0}.row{flex-wrap:wrap;gap:10px}.big{font-size:40px}.callout{padding:14px;margin-top:12px}
+ #visual-picture,.visual:has(.diagram-caption) #visual-picture,.visual:has(#experiment-controls:empty) #visual-picture:not(:has(.concept-flow)){height:auto;margin:0;width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+ #visual-picture svg{display:block;width:620px;height:327px;max-width:none}.diagram-caption{font-size:15px;line-height:1.5}
+ .visual>svg{height:auto;min-height:220px;width:100%}.visual>svg.particle,.visual>svg.reaction{width:560px;max-width:none}.visual:has(>svg.particle),.visual:has(>svg.reaction){overflow-x:auto;align-items:flex-start}
+ .concept-flow{gap:10px}.concept-tile{font-size:21px;min-height:60px;padding:14px;gap:12px}.concept-tile small{font-size:18px}
+ .readings{flex-wrap:wrap}.readings span{font-size:15px;white-space:normal;min-width:100px}.readings b{font-size:20px}.experiment-controls label{font-size:17px}.experiment-controls select,.experiment-controls button{font-size:17px;min-height:44px}.slider-label{min-width:100%}.slider-label input{height:44px}
+ table{display:block;max-width:100%;overflow-x:auto;font-size:17px!important}table th,table td{min-width:95px;padding:8px}.quiz-row{grid-template-columns:1fr;gap:10px}.quiz-row button{font-size:17px;min-height:44px}
+ .build-area{display:grid;grid-template-columns:1fr;gap:16px;height:auto}.lesson-work,.build-visual{height:auto!important;min-width:0}.bracket-stage{overflow-x:auto}.bracket-stage svg{width:650px;max-width:none}.bracket-line{font-size:19px}.phase-row{flex-wrap:wrap;gap:6px}.phase-row span{font-size:15px}.formula-large{font-size:48px}.element-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.element-grid button{min-width:0;font-size:18px;padding:7px}.symbol-build{font-size:58px}.formula{font-size:30px}
+ #model-note{font-size:14px;line-height:1.6;margin:18px 0}footer{height:auto;min-height:65px;flex-wrap:wrap;padding:10px 0;gap:10px}footer .tools{flex-wrap:wrap;gap:6px}footer button{font-size:16px;padding:7px 10px;min-height:44px}.page-indicator{font-size:17px;padding:6px}
+ #toc{position:fixed;top:8px;left:6px;width:44px;height:44px;min-height:44px;background:white;z-index:20}
+ #status{position:fixed;top:62px;left:12px;right:12px;font-size:16px}#panel{transform:none}#panel.toc-panel{top:58px;max-height:80dvh}#panel-content p{font-size:18px}.rotate-tip{display:none!important}
+ #progress{position:fixed;top:0;bottom:auto;z-index:24;height:3px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}

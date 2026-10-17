@@ -1,0 +1,18 @@
+const fs=require('fs'),vm=require('vm'),path=require('path'),assert=require('assert/strict');
+const root=path.resolve(__dirname,'..'),c={};vm.createContext(c);vm.runInContext(fs.readFileSync(root+'/physics/grade-9/shared/models.js','utf8')+';this.P=Physics;',c);let passed=0;const check=(ok,label)=>{assert.ok(ok,label);passed++;},eq=(a,b)=>Math.abs(a-b)<1e-8;
+// Independent nodal analysis of the exact branches used to draw the schematic.
+function solve(net){const ids=[...new Set(net.branches.flatMap(b=>[b.from,b.to]))],parent=Object.fromEntries(ids.map(x=>[x,x])),find=x=>parent[x]===x?x:parent[x]=find(parent[x]),join=(a,b)=>parent[find(a)]=find(b);
+for(const b of net.branches)if(['wire','ammeter'].includes(b.kind)||b.kind==='switch'&&b.value||b.kind==='resistor'&&b.value===0)join(b.from,b.to);
+const edges=net.branches.filter(b=>b.kind==='resistor'&&b.value>0).map(b=>({...b,a:find(b.from),b:find(b.to)})),fixed={[find('P')]:net.source.voltage,[find('N')]:0},nodes=[...new Set(ids.map(find))],seen=new Set();
+for(const node of nodes){if(seen.has(node))continue;const group=[],stack=[node];while(stack.length){const n=stack.pop();if(seen.has(n))continue;seen.add(n);group.push(n);for(const e of edges)if(e.a===n)stack.push(e.b);else if(e.b===n)stack.push(e.a);}if(!group.some(n=>n in fixed))fixed[group[0]]=0;}
+const unknown=nodes.filter(x=>!(x in fixed)),A=unknown.map(()=>Array(unknown.length+1).fill(0));
+unknown.forEach((n,i)=>{for(const e of edges){const other=e.a===n?e.b:e.b===n?e.a:null;if(other===null||other===n)continue;const g=1/e.value;A[i][i]+=g;if(other in fixed)A[i][unknown.length]+=g*fixed[other];else A[i][unknown.indexOf(other)]-=g;}});
+for(let i=0;i<unknown.length;i++){let k=i;for(let j=i+1;j<unknown.length;j++)if(Math.abs(A[j][i])>Math.abs(A[k][i]))k=j;[A[i],A[k]]=[A[k],A[i]];const v=A[i][i];assert.ok(Math.abs(v)>1e-10);for(let j=i;j<=unknown.length;j++)A[i][j]/=v;for(let j=0;j<unknown.length;j++)if(j!==i){const factor=A[j][i];for(let k=i;k<=unknown.length;k++)A[j][k]-=factor*A[i][k];}}
+unknown.forEach((n,i)=>fixed[n]=A[i][unknown.length]);return Object.fromEntries(net.branches.filter(b=>b.kind==='resistor'||b.kind==='open').map(b=>[b.id,{U:fixed[find(b.from)]-fixed[find(b.to)],I:b.kind==='open'||b.value===0?0:(fixed[find(b.from)]-fixed[find(b.to)])/b.value}]));}
+for(const mode of ['series','parallel','single'])for(const closed of [false,true])for(const b1 of [false,true])for(const b2 of [false,true])for(const fault of ['normal','open','short'])for(const r2 of [5,20,30]){
+const s={U:6,r1:10,r2,mode,closed,b1,b2,fault},m=c.P.circuit(s),actual=solve(c.circuitNetwork(s));check(eq(actual.R1.I,m.I1),'R1 current '+JSON.stringify(s));check(eq(actual.R1.U,m.U1),'R1 voltage');if(mode!=='single'){check(eq(actual.R2.I,m.I2),'R2 current');check(eq(actual.R2.U,m.U2),'R2 voltage');}}
+for(const term of ['AC','AD','BC','BD','AB','CD'])for(let i=0;i<=20;i++){const p=i/20,v=c.P.rheostat(p,term);check(eq(v,term==='AB'?20:term==='CD'?0:term[0]==='A'?20*p:20*(1-p)),'six terminals boundary');}
+for(const R of [5,10,15]){const p={scene:'ohm',mode:'resistance'},s={...c.initial(p),ohmR:R,rp:R};check(eq(c.renderModel(p,s,0).data.U,3),'control voltage');s.closed=false;check(c.renderModel(p,s,0).data.I===0,'open before replacement');}
+for(let r=0;r<=20;r+=.5){const p={scene:'safety'},s={...c.initial(p),r2:r};check(c.renderModel(p,s,0).data.safe===(r>=5&&r<=10),'combined limits');p.currentOnly=true;check(c.renderModel(p,s,0).data.safe===(r>=5),'current limit only');}
+check(c.renderModel({scene:'power',power:1000,duration:720},c.initial({}),3).data.W===720000,'energy example');
+fs.writeFileSync(root+'/test-results/network.json',JSON.stringify({passed,failed:0},null,2));console.log({passed,failed:0});
