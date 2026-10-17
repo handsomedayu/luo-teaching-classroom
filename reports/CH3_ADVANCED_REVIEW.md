@@ -19,7 +19,7 @@
 | 检查 | 实测结果 |
 |---|---|
 | 新电路节点求解、误接及改线约束 | `node tests/advanced-circuits.cjs` 通过（22 页、13 类改错及关键读数） |
-| 新页与母版逐页浏览器检查 | `ADVANCED_WEBKIT=1 node tests/advanced-browser.cjs`：Chrome 1920×1080、1366×768，WebKit 844×390；34 页逐步、返回、重播、目录、全屏、布局、离线及资源错误检查；最终计数见 `test-results/advanced-circuits/browser-results.json` |
+| 新页与母版逐页浏览器检查 | `ADVANCED_WEBKIT=1 node tests/advanced-browser.cjs`：Chrome 1920×1080、1366×768，WebKit 844×390；34 页逐步、返回、重播、目录、全屏、布局、离线、控制台及资源错误检查，954 项通过、0 失败 |
 | 点击、逐根接线、改前改后、暂停及真实触控 | `ADVANCED_WEBKIT=1 node tests/advanced-interactions.cjs`：Chrome + WebKit，139 项通过、0 失败 |
 | 原有完整第三章回归 | `PHYSICS_CHAPTERS=3; PHYSICS_MODE=all; node tests/regression.cjs`：Chrome 桌面两尺寸、Chrome/WebKit 手机，847 项通过、0 失败 |
 | 其它章节与网站资源 | `node tests/site.cjs` 369 项、`node tests/preservation.cjs` 963 项、`node tests/science.cjs` 601 项、`node tests/network.cjs` 935 项，均为 0 失败 |
