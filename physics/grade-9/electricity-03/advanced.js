@@ -401,7 +401,7 @@ const AdvancedCircuits=(()=>{
    const E=id=>net.edges.find(e=>e.id===id);
    const I=id=>res.current[id]||0;
    const fail=m=>({ok:false,msg:m}),pass=m=>({ok:true,msg:m});
-   const inSeries=(a,b)=>Math.abs(I(a)-I(b))<1e-6&&Math.abs(I(a))>1e-6;
+   const inSeries=(a,b)=>inSeriesTopo(net,a,b); // P0 修复：拓扑判定，非电流数值比较
    const inParallel=(a,b)=>{const x=E(a),y=E(b);if(!x||!y)return false;return eq(x.a,y.a)&&eq(x.b,y.b)||eq(x.a,y.b)&&eq(x.b,y.a);};
    switch(caseName){
      case 'ammeterParallel':
@@ -500,7 +500,7 @@ const AdvancedCircuits=(()=>{
  // 电表测量对象：由拓扑推导
  function describeMeasure(net,res,meterId){
    const m=net.edges.find(e=>e.id===meterId);
-   if(!m)return null;
+   if(!m||(m.type!=='ammeter'&&m.type!=='voltmeter'))return null; // 非电表返回 null
    const R=res.roots||{},F=x=>R[x];
    if(m.type==='voltmeter'){
      const plus=m.reverse?m.b:(m.positive||m.a),minus=m.reverse?(m.positive||m.a):m.b;
@@ -509,13 +509,19 @@ const AdvancedCircuits=(()=>{
      return {kind:'V',plusLabel:nodeLabel(net,plus),minusLabel:nodeLabel(net,minus),loads:hit,value:res.meter[meterId]??0};
    }
    const I=res.meter[meterId]??0;
-   const series=net.edges.filter(e=>['lamp','rheostat','resistor'].includes(e.type)&&Math.abs((res.current[e.id]||0)-I)<1e-6&&Math.abs(I)>1e-6).map(e=>e.id);
-   return {kind:'A',series,value:I};
+   const measured=seriesLoadsTopo(net,meterId); // P0 修复：拓扑判定（测量包含），非电流数值比较
+   // 区分严格串联（支路表）与干路测量：严格串联要求双向断流
+   const strict=measured.filter(id=>inSeriesTopo(net,meterId,id));
+   return {kind:'A',series:measured,strict,value:I};
  }
  function fmtMeasure(d,meterId){
    if(!d)return '';
    if(d.kind==='V')return `${meterId}：＋接线柱→节点${d.plusLabel}，－接线柱→节点${d.minusLabel}；跨接${d.loads.length?d.loads.join('、'):'（无用电器）'}，读数 ${d.value.toFixed(2)} V。`;
-   return d.series.length?`${meterId}与${d.series.join('、')}串联，读数 ${d.value.toFixed(2)} A。`:`${meterId}所在路径电流 ${d.value.toFixed(2)} A。`;
+   if(!d.series.length)return `${meterId}所在路径电流 ${d.value.toFixed(2)} A。`;
+   // 严格串联（单支路）vs 干路测量（含多支路）
+   if(d.strict.length===d.series.length&&d.series.length===1)return `${meterId}与${d.series[0]}串联，读数 ${d.value.toFixed(2)} A。`;
+   if(d.strict.length===d.series.length)return `${meterId}与${d.series.join('、')}串联，读数 ${d.value.toFixed(2)} A。`;
+   return `${meterId}测干路电流（含${d.series.join('、')}支路），读数 ${d.value.toFixed(2)} A。`;
  }
  // 改错页：待选目标接线柱叠加层
  function termOverlay(tm,pendingKey){
@@ -598,6 +604,40 @@ const AdvancedCircuits=(()=>{
    if(result.sourceShort)caption+=' 注意：当前存在电源短路（危险，仅屏幕模拟）。';
    return {picture,controls,metrics:'',caption,data:{net,caseName,editCount:(s.edits||[]).length,editDone:s.editDone,sourceShort:result.sourceShort,edits:(s.edits||[]).map(e=>({...e}))}};
  }
+ // ---- 拓扑串联判定（P0 修复）：不用电流数值比较 ----
+ // 严格串联：A 与 B 互为唯一路径 ⟺ 断开任一，另一必断流（基于实际求解）
+ // 这能区分"同支路串联"与"等阻并联恰好电流相等"的情况
+ function inSeriesTopo(net,idA,idB){
+   const sw=net.switches||{};
+   const getI=(res,id)=>Math.abs((res.current||{})[id]||0);
+   const base=solve(net,sw);
+   if(getI(base,idA)<1e-9||getI(base,idB)<1e-9)return false; // 有一无电流，保守判否
+   const cut=id=>({...net,edges:net.edges.filter(e=>e.id!==id),switches:{...sw}});
+   if(getI(solve(cut(idA),sw),idB)>1e-9)return false; // 断开 A，B 仍有电流 → 非串联
+   if(getI(solve(cut(idB),sw),idA)>1e-9)return false; // 断开 B，A 仍有电流 → 非串联
+   return true;
+ }
+ // 测量包含：电表 M 是否测到负载 L 的电流（断开 M 则 L 断流，单向）
+ // 用于 describeMeasure：干路表测总电流（含各支路），支路表测本支路
+ function measuresLoad(net,meterId,loadId){
+   const sw=net.switches||{};
+   const getI=(res,id)=>Math.abs((res.current||{})[id]||0);
+   const base=solve(net,sw);
+   if(getI(base,meterId)<1e-9||getI(base,loadId)<1e-9)return false;
+   const cutM={...net,edges:net.edges.filter(e=>e.id!==meterId),switches:{...sw}};
+   return getI(solve(cutM,cutM.switches),loadId)<1e-9;
+ }
+ // 找出被指定电流表测到电流的所有负载（describeMeasure 用）
+ function seriesLoadsTopo(net,meterId){
+   const m=net.edges.find(e=>e.id===meterId);
+   if(!m||m.type!=='ammeter')return [];
+   const sw=net.switches||{};
+   const getI=(res,id)=>Math.abs((res.current||{})[id]||0);
+   const base=solve(net,sw);
+   if(getI(base,meterId)<1e-9)return [];
+   const loads=net.edges.filter(e=>['lamp','rheostat','resistor'].includes(e.type));
+   return loads.filter(L=>measuresLoad(net,meterId,L.id)).map(e=>e.id);
+ }
  // ---- 交互动作 ----
  function actTerm(s,p,key){
    if(p.task==='convert'&&s.wireMode==='student'&&!s.showRef){
@@ -666,5 +706,5 @@ const AdvancedCircuits=(()=>{
    s.editMsg=(r.ok?'✓ ':'✗ ')+r.msg;s.editOk=r.ok;s.editDone=r.ok;
    if(r.ok)s.showParse=true;
  }
- return {initial,render,action,solve,parallel,series,make,pages,terminals,requiredWires,validateWire,applyEdits,checkEdit,describeMeasure,powered,EDIT_RULES,EXPLANATIONS};
+ return {initial,render,action,solve,parallel,series,make,pages,terminals,requiredWires,validateWire,applyEdits,checkEdit,describeMeasure,powered,EDIT_RULES,EXPLANATIONS,inSeriesTopo,seriesLoadsTopo,measuresLoad};
 })();

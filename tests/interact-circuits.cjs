@@ -125,4 +125,34 @@ for(const [c,fn] of Object.entries(goodEdits)){
     if(i===1)assert.strictEqual(r.total,0,'总开关断开无电流');
   }ok('通路/开路/短路五态一致');}
 }
+// ---------- 七、拓扑串联判定回归（P0 修复） ----------
+// 反例：等阻并联，两支路电流相等，但 A错 只与 L1 同支路
+{
+  const net=A.parallel({count:2,branchMeters:true,res:[10,10]});
+  net.edges.find(e=>e.id==='A1').id='A错';
+  const res=A.solve(net,net.switches||{});
+  near(res.current['A错'],0.6);near(res.current['L1'],0.6);near(res.current['L2'],0.6);
+  // describeMeasure 不应把 L2 列为串联
+  const dm=A.describeMeasure(net,res,'A错');
+  assert(dm.series.includes('L1')&&!dm.series.includes('L2'),'等阻并联：A错只与L1串联');ok('等阻并联 describeMeasure 不误判');
+  // checkEdit 不应判对
+  assert(!A.checkEdit('ammeterParallel',net,res).ok,'等阻并联错接不应判对');ok('等阻并联 checkEdit 拒绝误判');
+  assert(!A.checkEdit('multiFix',net,res).ok);ok('multiFix 等阻并联拒绝误判');
+  // inSeriesTopo 直接验证
+  assert(A.inSeriesTopo(net,'A错','L1'),'A错与L1拓扑串联');ok('inSeriesTopo 同支路为真');
+  assert(!A.inSeriesTopo(net,'A错','L2'),'A错与L2非串联');ok('inSeriesTopo 并联为假');
+}
+// 对称零电流：电桥平衡时电流为零，保守判否
+{
+  const net=A.series({});const res=A.solve(net,net.switches||{});
+  assert(!A.inSeriesTopo(net,'A₀','L1')||res.current['A₀']!==0,'零电流保守处理');ok('零电流保守判否');
+}
+// 真串联：series() 中 A₀ 与 L1、L2 均串联
+{
+  const net=A.series({});const res=A.solve(net,net.switches||{});
+  assert(A.inSeriesTopo(net,'A₀','L1'),'干路表与L1串联');ok('真串联判定为真');
+  assert(A.inSeriesTopo(net,'A₀','L2'),'干路表与L2串联');ok('干路表与多负载串联');
+  const dm=A.describeMeasure(net,res,'A₀');
+  assert(dm.series.includes('L1')&&dm.series.includes('L2'));ok('干路表串联对象完整');
+}
 console.log(`\n全部 ${n} 项交互测试通过`);
