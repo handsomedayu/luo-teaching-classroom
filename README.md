@@ -23,12 +23,16 @@ node tests/chemistry.cjs
 node tests/site.cjs
 node tests/motion.cjs
 node tests/preservation.cjs
+node tests/review-interactions.cjs
+node tests/review-capture.cjs
 node tests/performance.cjs <对照版本目录> before
 node tests/performance.cjs . after
 node tests/capture.cjs
 ```
 
 `BASELINE` 可指定保护基线目录，供 preservation/capture 使用；完整性能对比应在同机同环境依次运行，避免并行测试争抢资源。`PHYSICS_MODE` 可选择 `1920`、`1366`、`mobile`、`webkit`，默认全量。
+
+PR #1 二审用关键页前后截图位于 `reports/review-images/`，对应科学与接线复核见 `reports/PHYSICS_REVIEW.md`。更新截图需提供只读 main 基线给 `BASELINE`，不要覆盖正式课件。
 
 截图、Performance traces、逐项结果位于 `test-results/`，已加入 Git 忽略；PR仅包含代码、测试与必要报告，不上传学生资料或本机截图。真机 iPhone Safari 不等同于 WebKit 模拟测试。
 

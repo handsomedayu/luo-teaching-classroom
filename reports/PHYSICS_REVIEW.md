@@ -2,6 +2,26 @@
 
 123页逐页核对，页数保持 12 / 12 / 12 / 12 / 12 / 14 / 12 / 13 / 12 / 12。下面列出核心点、观察任务、推理、结论和适用条件；每页的“讲解提示”提供同页教师引导。
 
+## PR #1 第二轮 P0 截图复核
+
+以下“前”为未修改的 main 基线，“后”为本 PR 整改版，均为真实 Chrome 1366×768 截图、同页同阶段；图像只含公开课堂画面。11组对照：
+
+| 页 | 对照 | 复核重点 |
+|---|---|---|
+| 1-7 | [前](review-images/1-07-before.png) / [后](review-images/1-07-after.png) | 验电器从中性到接触、箔片同号张开；[中性初态](review-images/1-07-neutral.png)、[接触中](review-images/1-07-contact.png) |
+| 3-6 | [前](review-images/3-06-before.png) / [后](review-images/3-06-after.png) | 总开关与支路开关在各自导线断点；[仅第二支路断开](review-images/3-06-branch-open.png) |
+| 4-3 | [前](review-images/4-03-before.png) / [后](review-images/4-03-after.png) | A 串联、V 跨 R₁，正端朝高电势端 |
+| 4-5 | [前](review-images/4-05-before.png) / [后](review-images/4-05-after.png) | 电压表跨接待测电阻，量程控制与读数对应 |
+| 6-3 | [前](review-images/6-03-before.png) / [后](review-images/6-03-after.png) | I-U 图像 1/2/3 V 对应 0.1/0.2/0.3 A，明确理想数据 |
+| 6-4 | [前](review-images/6-04-before.png) / [后](review-images/6-04-after.png) | 换 R 前断开；变阻器可使 U₁=3 V 并记录当前模型数据 |
+| 7-10 | [前](review-images/7-10-before.png) / [后](review-images/7-10-after.png) | I≤0.4 A 对应 R₂≥5 Ω；[等号边界](review-images/7-10-current-edge.png) |
+| 7-11 | [前](review-images/7-11-before.png) / [后](review-images/7-11-after.png) | 再加 U₂≤3 V，交集为 5～10 Ω；[等号边界](review-images/7-11-voltage-edge.png) |
+| 9-3 | [前](review-images/9-03-before.png) / [后](review-images/9-03-after.png) | 串联电流相同、R 为 10/20 Ω，60 s 热量 150/300 J；[零点](review-images/9-03-zero.png)、[30 s](review-images/9-03-half.png) |
+| 9-4 | [前](review-images/9-04-before.png) / [后](review-images/9-04-after.png) | 两个独立低压回路，不误画成“串联不同电流”；10 Ω下热量比 1:4 |
+| 10-2 | [前](review-images/10-02-before.png) / [后](review-images/10-02-after.png) | L/N构成工作回路；PE仅接外壳，不接作零线 |
+
+电表/开关由支路元件两端真实断线接入；`tests/network.cjs` 用独立节点方程核对支路和读数，`tests/science.cjs` 核对关键数值及符号。静态图示与模型数值相符；家庭图只作安全示意，不是施工图。教材具体版次、海南中考逐条对应及课堂实物操作仍待罗老师确认，不能据截图宣称最终教学验收。
+
 ## 本轮实际修复
 
 - 电荷：初态中性、转移及系统守恒保留；补中性物体吸引示意、验电器未带电—接触—张开，净电荷份额在接触前后守恒。

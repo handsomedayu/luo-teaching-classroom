@@ -7,6 +7,21 @@ let motionData={};
 const q=()=>state[page],coarse=matchMedia('(pointer:coarse) and (max-width:1000px)');
 const setText=(id,text)=>{if($(id).textContent!==text)$(id).textContent=text;};
 const notes='本课为待教师审核样稿。教材版次及海南中考逐条要求未核实。电路采用理想电源、导线与电表；定值电阻温度不变。动画不代表真实电子速度。';
+function teacherFlow(p){
+ const flows={
+  charge:'设定接触条件 → 预测两物体电性 → 播放电子转移 → 核对净电荷守恒 → 说明只转移电子、份额为示意',
+  scope:'选接触体电性 → 预测箔片变化 → 从初态逐步演示 → 分析同种电荷排斥 → 说明张角不能定量读电荷',
+  circuit:'先设开关和电阻 → 预测各支路通断与读数 → 操作并观察路径 → 按节点和电表接法分析 → 归纳理想电路适用条件',
+  meter:'先选量程 → 预测分度值与读数 → 调整指针格数 → 按量程计算 → 说明这是读数训练而非实测',
+  rheostat:'先选接线柱 → 预测滑片移动后的接入电阻 → 移动滑片 → 对照有效电阻丝 → 归纳一上一下接法',
+  ohm:'先断开开关设置电阻 → 预测电表示数 → 闭合并调变阻器、记录 → 比较数据 → 指明恒温定值电阻与理想模型条件',
+  safety:'先给定电流和电压限制 → 预测边界 → 调 R₂ 比较两表示数 → 取条件交集 → 说明仅适用于题设理想串联电路',
+  joule:'先固定电流、电阻、时间中的两项 → 预测热量比 → 播放并在同一时刻比较 → 用 Q＝I²Rt 分析 → 说明等热容、忽略散热且非实测',
+  lamp:'先设灯泡电压 → 预测电流和功率 → 调节电压观察示例曲线 → 比较 U、I、P → 说明灯丝电阻随温度变且数据非实测',
+  home:'先识别 L、N、PE → 预测开关和保护作用 → 仅观察屏幕示意 → 分析工作回路与保护路径 → 强调不是施工图、不操作市电'
+ };
+ return flows[p.scene]||'先设置已给条件 → 请学生预测 → 分步观察 → 说明依据 → 归纳结论及适用范围';
+}
 function pause(){playing=false;cancelAnimationFrame(raf);sync();}
 function sync(){
  const n=lessons[page].steps.length,key=[page,Math.floor(q()),q()===0,q()>=n,playing].join(':');if(key===syncKey)return;syncKey=key;
@@ -35,9 +50,11 @@ function goto(i){
  render();if(matchMedia('(max-width:700px) and (orientation:portrait)').matches)window.scrollTo(0,0);if($('panel').open)$('panel').close();$('toc').setAttribute('aria-expanded','false');
 }
 function animate(to){
- flushInput();pause();target=to;playing=true;last=performance.now();sync();
+ flushInput();pause();target=to;playing=true;last=performance.now();let lastHeatPaint=0;sync();
  function frame(now){const old=Math.floor(q());state[page]=Math.min(target,q()+Math.max(0,Math.min(now-last,100))/1500);last=now;
-  if(continuous.has(lessons[page].scene))paintMotion();else if(Math.floor(q())!==old)render(true);
+  if(lessons[page].scene==='joule'&&q()<target&&now-lastHeatPaint<33)reveal();
+  else if(continuous.has(lessons[page].scene)){paintMotion();if(lessons[page].scene==='joule')lastHeatPaint=now;}
+  else if(Math.floor(q())!==old)render(true);
   if(q()>=target){playing=false;sync();}else raf=requestAnimationFrame(frame);
  }raf=requestAnimationFrame(frame);
 }
@@ -56,7 +73,7 @@ function openPanel(mode){
  flushInput();pause();panelMode=mode;$('panel').className=mode==='toc'?'toc-panel':'';
  if(mode==='toc'){setText('panel-title','课堂目录');$('panel-content').innerHTML='<div class="toc-grid">'+lessons.map((p,i)=>`<button data-jump="${i}" ${i===page?'aria-current="page"':''}>${i+1}. ${p.title}</button>`).join('')+'</div>';}
  else if(mode==='experiment'){setText('panel-title','实验操作');const m=renderModel(lessons[page],experiments[page],q());$('panel-content').innerHTML='<div id="mobile-readings">'+m.metrics+'</div><div class="experiment-controls">'+(m.controls||'<p>本页使用分步按钮观察模型，无额外参数。</p>')+'</div>';}
- else{setText('panel-title','教师讲解提示');$('panel-content').innerHTML='<p>'+lessons[page].teacher+'</p><p class="small">'+notes+'</p>';}
+ else{setText('panel-title','教师讲解提示');$('panel-content').innerHTML='<p><b>操作顺序：</b>'+teacherFlow(lessons[page])+'</p><p>'+lessons[page].teacher+'</p><p class="small">'+notes+'</p>';}
  if(!$('panel').open)$('panel').showModal();$('toc').setAttribute('aria-expanded',mode==='toc');
  if(mode==='toc')$('panel-content').querySelector('[aria-current]')?.scrollIntoView({block:'nearest'});
 }
