@@ -10,3 +10,9 @@
 .experiment-controls button{font-size:20px;padding:12px 18px;min-height:48px;margin:4px}
 .experiment-controls select{font-size:19px;padding:10px 14px;min-height:48px}
 .term-layer circle{transition:r .15s}
+/* 改错页（26-31）：操作区独立滚动，按钮不被说明/导航遮挡 */
+.visual:has(.ac-fixwrap) #visual-picture{height:200px}
+.visual:has(.ac-fixwrap) #visual-picture:has(.ac-compare){height:220px}
+.visual:has(.ac-fixwrap) .ac-fixwrap{height:100%;width:100%}
+.visual:has(.ac-fixwrap) .ac-compare svg{height:180px}
+.visual:has(.ac-fixwrap) #experiment-controls{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;align-content:flex-start;scrollbar-gutter:stable}

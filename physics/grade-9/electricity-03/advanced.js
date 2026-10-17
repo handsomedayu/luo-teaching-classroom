@@ -570,13 +570,14 @@ const AdvancedCircuits=(()=>{
    if(s.showStd){
      const bad=make(p,{...s,fixed:false}),rBad=solve(bad,bad.switches||{});
      const good=make(p,{...s,fixed:true}),rGood=solve(good,good.switches||{});
-     picture=`<div class="ac-compare"><div><b>改前（错图）</b>${draw(bad,rBad,{q:1})}</div><div><b>改后（标准）</b>${draw(good,rGood,{q:2})}</div></div>`;
+     picture=`<div class="ac-fixwrap"><div class="ac-compare"><div><b>改前（错图）</b>${draw(bad,rBad,{q:1})}</div><div><b>改后（标准）</b>${draw(good,rGood,{q:2})}</div></div></div>`;
    }else{
-     picture=draw(net,result,{q,selected:s.selected,guess:s.selected});
+     picture=`<div class="ac-fixwrap">`+draw(net,result,{q,selected:s.selected,guess:s.selected});
      if(s.pendingOp==='moveA'||s.pendingOp==='moveB'){
        const tm=terminals(net,false);
        picture=picture.replace(/<\/svg>\s*$/,termOverlay(tm,null)+'</svg>');
      }
+     picture+='</div>';
    }
    const sel=net.edges.find(e=>e.id===s.selected);
    let controls='';
