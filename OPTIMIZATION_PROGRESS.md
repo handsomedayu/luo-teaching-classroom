@@ -1,3 +1,14 @@
+# V3.3 第三阶段进度（2026-10-20）
+
+当前阶段：**C，第 14 页自由接电压表**。阶段 B 第 26—31 页在 Draft PR #15 完成，候选提交 `db210c0`；Cloudflare [阶段 B 最新固定预览](https://54d14d8a.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 已成功部署，HTML/JS/CSS 均 HTTP 200。独立工作树与分支 `codex/v33-stage-c` 从该提交建立；不触碰 `main`、正式站或化学课件。
+
+已完成：核对 Issue #13 的阶段 C 要求、第 14 页现有静态模型与阶段 B 的 Git 状态；编写 `V33_STAGE_C_PLAN.md`。尚未修改第 14 页课件。
+
+未完成：第 14 页真实节点接线、预测与验证、浏览器与科学回归、候选预览；阶段 D 十章去重与教师审核。
+
+下一步：仅改第 14 页，用三灯串联真实节点驱动自由接表；定向验证并修复后发布 Draft 预览。
+
+---
 # V3.3 第二阶段进度（2026-10-20）
 
 当前阶段：**B 已完成并通过自动回归，待教师审核；下一阶段 C**。阶段 A 的第 21—25 页已在独立 Draft PR #14 提交并部署，最新固定预览 <https://2a64ee85.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/>（提交 `1204b94`，页面及脚本 HTTP 200）。新分支 `codex/v33-stage-b` 以该提交为基线，保留阶段 A 工作树与预览；[Draft PR #15](https://github.com/handsomedayu/luo-teaching-classroom/pull/15) 为本阶段审阅入口。
