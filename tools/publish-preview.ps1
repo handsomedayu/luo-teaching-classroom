@@ -13,7 +13,7 @@ try {
   if ($LASTEXITCODE -ne 0 -or $remote -notmatch 'handsomedayu/luo-teaching-classroom') {
     throw 'Expected the luo-teaching-classroom GitHub repository as origin.'
   }
-  $staged = @(& git diff --cached --name-only --diff-filter=ACMR)
+  $staged = @(& git diff --cached --name-only --diff-filter=ACMRD)
   if ($LASTEXITCODE -ne 0 -or $staged.Count -eq 0) {
     throw 'Nothing staged: Codex must explicitly git add the intended files first (never git add -A).'
   }
