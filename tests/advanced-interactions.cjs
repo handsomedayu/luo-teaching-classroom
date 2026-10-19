@@ -1,13 +1,18 @@
 'use strict';
 const fs=require('fs'),path=require('path'),{chromium,webkit}=require('./browser.cjs');const root=path.resolve(__dirname,'../physics/grade-9/electricity-03'),out=path.resolve(__dirname,'../test-results/advanced-circuits');fs.mkdirSync(out,{recursive:true});const url='file:///'+root.replace(/\\/g,'/')+'/index.html',failed=[];let passed=0;function check(x,msg){if(x)passed++;else failed.push(msg);}
 async function run(browser,name,viewport,mobile=false){const c=await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile});await c.route(/^https?:/,r=>r.abort());const p=await c.newPage();p.on('pageerror',e=>failed.push(name+' '+e.message));await p.goto(url);await p.waitForFunction(()=>typeof q==='function'&&lessons.length===34);
- for(const i of [20,21,23,24]){await p.evaluate(i=>goto(i),i);await p.locator('[data-action="ac:showRef"]').click();
-  // 学生连线模式：点两个接线柱
-  const terms=await p.locator('[data-action="ac:term"]').count();check(terms>0,name+' wiring terminals '+i);
-  if(terms>=2){const pair=await p.evaluate(()=>{const net=AdvancedCircuits.make(lessons[page],experiments[page]),tm=AdvancedCircuits.terminals(net,true),w=AdvancedCircuits.requiredWires(net,true)[0];return [tm.find(t=>t.node===w.n1).key,tm.find(t=>t.node===w.n2).key];});
+ for(const i of [20,21,23,24]){await p.evaluate(i=>goto(i),i);
+  if(i===20){
+   const terms=await p.locator('[data-action="ac:p23Term"]').count();check(terms===6,name+' wiring terminals '+i);
+   await p.locator('[data-action="ac:p23Term"][data-value="P"]').click();await p.locator('[data-action="ac:p23Term"][data-value="L1A"]').click();
+   const partial=await p.evaluate(()=>({wires:experiments[page].p23Wires.length,total:modelData.total}));check(partial.wires===1&&Math.abs(partial.total||0)<1e-8,name+' actual partial wire '+i+' '+JSON.stringify(partial));
+   await p.locator('[data-action="ac:p23Undo"]').click();check(await p.evaluate(()=>experiments[page].p23Wires.length===0),name+' wire undo '+i);
+  }else{await p.locator('[data-action="ac:showRef"]').click();
+   const terms=await p.locator('[data-action="ac:term"]').count();check(terms>0,name+' wiring terminals '+i);
+   if(terms>=2){const pair=await p.evaluate(()=>{const net=AdvancedCircuits.make(lessons[page],experiments[page]),tm=AdvancedCircuits.terminals(net,true),w=AdvancedCircuits.requiredWires(net,true)[0];return [tm.find(t=>t.node===w.n1).key,tm.find(t=>t.node===w.n2).key];});
     await p.locator(`[data-action="ac:term"][data-value="${pair[0]}"]`).first().click();await p.locator(`[data-action="ac:term"][data-value="${pair[1]}"]`).first().click();
     const uw=await p.evaluate(()=>experiments[page].userWires.length);check(uw===1,name+' student wire placed '+i);}
-  await p.locator('[data-action="ac:wireUndo"]').click();check(await p.evaluate(()=>experiments[page].userWires.length===0),name+' wire undo '+i);
+   await p.locator('[data-action="ac:wireUndo"]').click();check(await p.evaluate(()=>experiments[page].userWires.length===0),name+' wire undo '+i);}
   // 教师演示模式
   await p.locator('[data-action="ac:wireMode"]').click();check(await p.evaluate(()=>experiments[page].wireMode==='demo'),name+' demo mode '+i);
   await p.locator('[data-action="ac:source"]').click();check(await p.evaluate(()=>experiments[page].showTarget),name+' conversion toggle '+i);
