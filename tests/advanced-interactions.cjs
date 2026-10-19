@@ -2,9 +2,9 @@
 const fs=require('fs'),path=require('path'),{chromium,webkit}=require('./browser.cjs');const root=path.resolve(__dirname,'../physics/grade-9/electricity-03'),out=path.resolve(__dirname,'../test-results/advanced-circuits');fs.mkdirSync(out,{recursive:true});const url='file:///'+root.replace(/\\/g,'/')+'/index.html',failed=[];let passed=0;function check(x,msg){if(x)passed++;else failed.push(msg);}
 async function run(browser,name,viewport,mobile=false){const c=await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile});await c.route(/^https?:/,r=>r.abort());const p=await c.newPage();p.on('pageerror',e=>failed.push(name+' '+e.message));await p.goto(url);await p.waitForFunction(()=>typeof q==='function'&&lessons.length===34);
  for(const i of [20,21,23,24]){await p.evaluate(i=>goto(i),i);
-  if(i===20||i===21||i===23){
-   const terms=await p.locator('[data-action="ac:p23Term"]').count();check(terms===(i===20?6:i===21?14:10),name+' wiring terminals '+i);
-   await p.locator('[data-action="ac:p23Term"][data-value="P"]').click();await p.locator(`[data-action="ac:p23Term"][data-value="${i===20?'L1A':i===21?'A0P':'AP'}"]`).click();
+  if([20,21,23,24].includes(i)){
+   const terms=await p.locator('[data-action="ac:p23Term"]').count();check(terms===(i===20?6:i===21?14:i===23?10:24),name+' wiring terminals '+i);
+   await p.locator('[data-action="ac:p23Term"][data-value="P"]').click();await p.locator(`[data-action="ac:p23Term"][data-value="${i===20?'L1A':i===21?'A0P':i===23?'AP':'S0P'}"]`).click();
    const partial=await p.evaluate(()=>({wires:experiments[page].p23Wires.length,total:modelData.total}));check(partial.wires===1&&Math.abs(partial.total||0)<1e-8,name+' actual partial wire '+i+' '+JSON.stringify(partial));
    await p.locator('[data-action="ac:p23Undo"]').click();check(await p.evaluate(()=>experiments[page].p23Wires.length===0),name+' wire undo '+i);
   }else{await p.locator('[data-action="ac:showRef"]').click();
