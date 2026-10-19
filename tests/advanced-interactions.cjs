@@ -20,7 +20,7 @@ async function run(browser,name,viewport,mobile=false){const c=await browser.new
   const total=await p.evaluate(()=>modelData.net.edges.length);for(let j=1;j<total;j++)await p.locator('[data-action="ac:wire"]').click();
   check(await p.evaluate(()=>modelData.visibleCount===modelData.net.edges.length),name+' conversion all wires '+i);
   if(name==='chrome')await p.screenshot({path:path.join(out,`conversion-${i+1}.png`)});await p.locator('#reset').click();}
- for(const i of [25,26,27,28,29,30]){await p.evaluate(i=>goto(i),i);const cases=await p.locator('#experiment-controls select').locator('option').count();for(let k=0;k<cases;k++){await p.locator('#experiment-controls select').selectOption(String(k));check(await p.evaluate(()=>(experiments[page].edits||[]).length===0),name+' fresh case '+i+'-'+k);
+ for(const i of [25,26,27,28,29,30]){await p.evaluate(i=>goto(i),i);const select=p.locator('#experiment-controls select'),cases=Math.max(1,await select.locator('option').count());for(let k=0;k<cases;k++){if(await select.count())await select.selectOption(String(k));check(await p.evaluate(()=>(experiments[page].edits||[]).length===0),name+' fresh case '+i+'-'+k);
   if(i===25){
    if(k<2){await p.locator('[data-action="ac:v33Start"]').first().click();check(await p.evaluate(()=>!!experiments[page].v33Pending),name+' lead selected '+i+'-'+k);const key=await p.evaluate(node=>AdvancedCircuits.terminals(modelData.net,false).find(t=>t.node===node).key,k===0?'b2b':'A0');await p.locator(`[data-action="ac:v33Term"][data-value="${key}"]`).click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' lead moved '+i+'-'+k);}
    else{await p.locator('[data-v33-meter]').click();await p.locator(`[data-action="ac:${k===2?'v33Swap':'v33Range'}"]`).click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' meter corrected '+i+'-'+k);}
@@ -48,12 +48,22 @@ async function run(browser,name,viewport,mobile=false){const c=await browser.new
    await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.ac-compare svg').count()===2,name+' before-after '+i+'-'+k);
    await p.locator('#reset').click();continue;
   }
+  if(i===28){check(await p.locator('[data-action="ac:p29hint"]').count()===1,name+' prior direct p29 preserved');await p.locator('#reset').click();continue;}
   if(i===29){
    const pt=await p.locator('[data-v33-delete="旁路线"] .p28-wire-hit').evaluate(e=>{const svg=e.ownerSVGElement,z=svg.createSVGPoint(),p=e.getPointAtLength(e.getTotalLength()*.48);z.x=p.x;z.y=p.y;const r=z.matrixTransform(svg.getScreenCTM());return{x:r.x,y:r.y};});
    if(mobile){await p.touchscreen.tap(pt.x,pt.y);await p.locator('[data-action="ac:v33WireDelete"]').click();}else await p.mouse.click(pt.x,pt.y,{button:'right'});
    check(await p.evaluate(()=>experiments[page].edits.length===1),name+' sole wire removed '+i);
    await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>experiments[page].editDone),name+' one-wire correction '+i);
    await p.locator('[data-action="ac:undoEdit"]').click();check(await p.evaluate(()=>experiments[page].edits.length===0),name+' undo edit '+i);
+   await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.ac-compare svg').count()===2,name+' before-after '+i);
+   await p.locator('#reset').click();continue;
+  }
+  if(i===30){
+   await p.locator('[data-action="ac:v33Start"][data-value="A错|a"]').click();await p.locator('[data-action="ac:v33Term"][data-value="275,180"]').click();
+   await p.locator('[data-action="ac:v33Start"][data-value="A错|b"]').click();await p.locator('[data-action="ac:v33Term"][data-value="345,180"]').click();
+   check(await p.evaluate(()=>experiments[page].edits.length===2&&Math.abs(modelData.total-1.1)<1e-6&&Math.abs(modelData.meter['A错']-.3)<1e-6),name+' real two-lead correction '+i);
+   await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>experiments[page].editDone),name+' valid corrected topology '+i);
+   await p.locator('[data-action="ac:undoEdit"]').click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' undo edit '+i);
    await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.ac-compare svg').count()===2,name+' before-after '+i);
    await p.locator('#reset').click();continue;
   }
