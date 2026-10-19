@@ -26,6 +26,7 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Staged diff contains whitespace errors.' }
   & node tools/build-review-preview.cjs
   if ($LASTEXITCODE -ne 0) { throw 'Review preview build failed; nothing pushed.' }
+  New-Item -ItemType Directory -Force -Path 'test-results' | Out-Null
   & node tests/science.cjs
   if ($LASTEXITCODE -ne 0) { throw 'Science check failed; nothing pushed.' }
   $report = Get-Content -Raw -Encoding UTF8 'test-results/science-results.json' | ConvertFrom-Json

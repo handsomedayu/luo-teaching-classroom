@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('fs'),path=require('path'),{chromium,webkit}=require('./browser.cjs');
-const root=path.resolve(__dirname,'../physics/grade-9/electricity-03'),out=path.resolve(__dirname,'../reports/v32-p29-clickwire'),resultDir=path.resolve(__dirname,'../test-results/v32-p29-clickwire');
+const root=path.resolve(__dirname,'../physics/grade-9/electricity-03'),out=path.resolve(__dirname,'../test-results/v32-p29-clickwire'),resultDir=out;
 const url='file:///'+root.replace(/\\/g,'/')+'/index.html',fail=[];let passed=0;
 fs.mkdirSync(out,{recursive:true});fs.mkdirSync(resultDir,{recursive:true});
 const check=(ok,label,details='')=>{if(ok)passed++;else fail.push({label,details});},near=(x,y)=>Math.abs(x-y)<1e-6;
