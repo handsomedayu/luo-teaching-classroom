@@ -1,12 +1,12 @@
 # V3.3 第三阶段进度（2026-10-20）
 
-当前阶段：**C，第 14 页自由接电压表**。阶段 B 第 26—31 页在 Draft PR #15 完成，候选提交 `db210c0`；Cloudflare [阶段 B 最新固定预览](https://54d14d8a.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 已成功部署，HTML/JS/CSS 均 HTTP 200。独立工作树与分支 `codex/v33-stage-c` 从该提交建立；不触碰 `main`、正式站或化学课件。
+当前阶段：**C，第 14 页自由接电压表开发和自动回归完成，待候选预览核对与教师审核**。阶段 B 第 26—31 页在 Draft PR #15 完成，候选提交 `db210c0`；Cloudflare [阶段 B 最新固定预览](https://54d14d8a.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 已成功部署，HTML/JS/CSS 均 HTTP 200。独立工作树与分支 `codex/v33-stage-c` 从该提交建立，[Draft PR #16](https://github.com/handsomedayu/luo-teaching-classroom/pull/16) 为审阅入口；不触碰 `main`、正式站或化学课件。
 
-已完成：核对 Issue #13 的阶段 C 要求、第 14 页现有静态模型与阶段 B 的 Git 状态；编写 `V33_STAGE_C_PLAN.md`。尚未修改第 14 页课件。
+已完成：核对 Issue #13 的阶段 C 要求、第 14 页原有静态模型与阶段 B Git 状态；编写 `V33_STAGE_C_PLAN.md` 并提交 `a86a3aa`。第 14 页已改为三灯基础回路与自由接 V 表笔，学生先预测再验证；实际接点送入现有求解器，未接妥显示“—”，同为 3 V 的不同测量对象按节点区分。发现 1920×1080 控件被截断并修复。Chrome 1920×1080、1366×768 与 WebKit 844×390 触控专项 54/54；阶段 B 各页专项 76/76、57/57、63/63、70/70、36/36、60/60；Chrome 整章交互 103/103、Chrome＋WebKit 211/211，Chrome 逐页 632/632、WebKit 横屏逐页 316/316，模型专项与科学 601/601 均通过，失败 0。报告见 `V33_STAGE_C_REPORT.md`，截图仅在本机忽略目录 `test-results/v33-p14/`。
 
-未完成：第 14 页真实节点接线、预测与验证、浏览器与科学回归、候选预览；阶段 D 十章去重与教师审核。
+未完成：第 14 页候选预览；阶段 D 十章去重与教师审核。
 
-下一步：仅改第 14 页，用三灯串联真实节点驱动自由接表；定向验证并修复后发布 Draft 预览。
+下一步：检查并提交第 14 页候选版，等待 Cloudflare 成功；随后从此候选版安全创建阶段 D 分支，先提交十章旧页→拟处理页对照表，涉及挪页删页时等待教师批准。
 
 ---
 # V3.3 第二阶段进度（2026-10-20）
