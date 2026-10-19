@@ -15,6 +15,8 @@ async function run(browser,name,viewport,touch=false){
  let x=await data();check(x.wires.length===0&&near(x.result.total,0),name+' blank actual circuit');check(x.readings.V1===null&&x.readings.V2===null,name+' disconnected V unreadable');
  check(await p.locator('.p23-pane').count()===2&&await p.locator('.p23-pane').first().locator('svg').count()===1,name+' diagram visible');
  check(await p.locator('.p23-wire').count()===0&&!(await p.locator('#readings').textContent()).trim(),name+' student answer hidden');
+ check(await p.locator('.p23-apparatus .p23-internal').count()===6,name+' apparatus internal leads visible');
+ check(await p.locator('.p23-range').allTextContents().then(a=>a.join('|'))==='0—0.6 A|0—15 V|0—15 V',name+' actual meter ranges shown');
  if(name.startsWith('chrome-')&&name!=='chrome-touch')await p.screenshot({path:path.join(out,'initial-'+viewport.width+'.png')});
  if(name==='webkit-touch')await p.screenshot({path:path.join(out,'initial-touch-844.png')});
  await connect('P','N');x=await data();check(x.wires.length===0&&/危险/.test(x.caption),name+' source short blocked');

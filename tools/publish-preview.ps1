@@ -28,7 +28,7 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Review preview build failed; nothing pushed.' }
   & node tests/science.cjs
   if ($LASTEXITCODE -ne 0) { throw 'Science check failed; nothing pushed.' }
-  $report = Get-Content -Raw 'test-results/science-results.json' | ConvertFrom-Json
+  $report = Get-Content -Raw -Encoding UTF8 'test-results/science-results.json' | ConvertFrom-Json
   if ($report.failed -ne 0) { throw "Science checks include $($report.failed) failures; nothing pushed." }
   # The calling Codex task must also have passed the relevant targeted browser
   # interaction tests before using this helper; this baseline is not sufficient.
