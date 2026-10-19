@@ -1,10 +1,11 @@
 'use strict';
 const fs=require('fs'),path=require('path'),{chromium,webkit}=require('./browser.cjs');const root=path.resolve(__dirname,'../physics/grade-9/electricity-03'),out=path.resolve(__dirname,'../test-results/advanced-circuits');fs.mkdirSync(out,{recursive:true});const url='file:///'+root.replace(/\\/g,'/')+'/index.html',failed=[];let passed=0;function check(x,msg){if(x)passed++;else failed.push(msg);}
 async function run(browser,name,viewport,mobile=false){const c=await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile});await c.route(/^https?:/,r=>r.abort());const p=await c.newPage();p.on('pageerror',e=>failed.push(name+' '+e.message));await p.goto(url);await p.waitForFunction(()=>typeof q==='function'&&lessons.length===34);
- for(const i of [20,21,22,23,24]){await p.evaluate(i=>goto(i),i);
+ for(const i of [20,21,22,23,24]){await p.evaluate(i=>goto(i),i);await p.locator('[data-action="ac:showRef"]').click();
   // 学生连线模式：点两个接线柱
   const terms=await p.locator('[data-action="ac:term"]').count();check(terms>0,name+' wiring terminals '+i);
-  if(terms>=2){await p.locator('[data-action="ac:term"]').first().click();await p.locator('[data-action="ac:term"]').nth(1).click();
+  if(terms>=2){const pair=await p.evaluate(()=>{const net=AdvancedCircuits.make(lessons[page],experiments[page]),tm=AdvancedCircuits.terminals(net,true),w=AdvancedCircuits.requiredWires(net,true)[0];return [tm.find(t=>t.node===w.n1).key,tm.find(t=>t.node===w.n2).key];});
+    await p.locator(`[data-action="ac:term"][data-value="${pair[0]}"]`).first().click();await p.locator(`[data-action="ac:term"][data-value="${pair[1]}"]`).first().click();
     const uw=await p.evaluate(()=>experiments[page].userWires.length);check(uw===1,name+' student wire placed '+i);}
   await p.locator('[data-action="ac:wireUndo"]').click();check(await p.evaluate(()=>experiments[page].userWires.length===0),name+' wire undo '+i);
   // 教师演示模式
@@ -16,8 +17,8 @@ async function run(browser,name,viewport,mobile=false){const c=await browser.new
   if(name==='chrome')await p.screenshot({path:path.join(out,`conversion-${i+1}.png`)});await p.locator('#reset').click();}
  for(const i of [25,26,27,28,29,30]){await p.evaluate(i=>goto(i),i);const cases=await p.locator('#experiment-controls select').locator('option').count();for(let k=0;k<cases;k++){await p.locator('#experiment-controls select').selectOption(String(k));check(await p.evaluate(()=>(experiments[page].edits||[]).length===0),name+' fresh case '+i+'-'+k);
   // 点一根导线，选择删除，检查答案
-  const wire=await p.locator('[data-action="ac:inspect"]').first().getAttribute('data-value');
-  await p.locator('[data-action="ac:inspect"]').first().click();
+  const hit=await p.locator('[data-action="ac:inspect"]:has(polyline)').first().evaluate(g=>{const q=g.querySelector('polyline').points,p=g.ownerSVGElement.createSVGPoint();p.x=(q[0].x+q[1].x)/2;p.y=(q[0].y+q[1].y)/2;const s=p.matrixTransform(g.ownerSVGElement.getScreenCTM());return {x:s.x,y:s.y};});
+  if(mobile)await p.touchscreen.tap(hit.x,hit.y);else await p.mouse.click(hit.x,hit.y);
   const hasDel=await p.locator('[data-action="ac:editOp"][data-value="delWire"]').count();
   if(hasDel){await p.locator('[data-action="ac:editOp"][data-value="delWire"]').click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' edit applied '+i+'-'+k);}
   await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>typeof experiments[page].editMsg==='string'&&experiments[page].editMsg.length>0),name+' check feedback '+i+'-'+k);
