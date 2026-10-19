@@ -1,6 +1,6 @@
 # V3.3 第二阶段进度（2026-10-20）
 
-当前阶段：**B，第 26—31 页改错交互开发及回归完成，待本版候选预览核对**。阶段 A 的第 21—25 页已在独立 Draft PR #14 提交并部署，最新固定预览 <https://2a64ee85.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/>（提交 `1204b94`，页面及脚本 HTTP 200）。新分支 `codex/v33-stage-b` 以该提交为基线，保留阶段 A 工作树与预览；[Draft PR #15](https://github.com/handsomedayu/luo-teaching-classroom/pull/15) 为本阶段审阅入口。
+当前阶段：**B 已完成并通过自动回归，待教师审核；下一阶段 C**。阶段 A 的第 21—25 页已在独立 Draft PR #14 提交并部署，最新固定预览 <https://2a64ee85.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/>（提交 `1204b94`，页面及脚本 HTTP 200）。新分支 `codex/v33-stage-b` 以该提交为基线，保留阶段 A 工作树与预览；[Draft PR #15](https://github.com/handsomedayu/luo-teaching-classroom/pull/15) 为本阶段审阅入口。
 
 已完成：建立 `V33_STAGE_B_PLAN.md`，核对原有 13 类改错题与每题允许改动的对象、端点和次数；阶段 A 第 21—25 页定向测试分别 49/49、58/58、91/91、67/67、64/64，整章交互 100/100、逐页 634/634、科学 601/601，失败均 0。未修改正式网站或 `main`。预览脚本已在提交 `1aedd1a` 解决全新工作树缺少 `test-results` 目录的问题。第 26 页四类电表改错已改成直接点引线端点或电表操作，保持同一求解器、答案校验和撤销重置；浏览器专项 76/76、旧第 29 页回归 70/70、整章交互 102/102、科学 601/601、逐页 634/634，失败均 0。1366×768 截图发现操作区拥挤和成功接线绕经电源，已修复并复测；提交 `02b44ac`，Cloudflare [固定预览](https://295a4e76.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 已成功部署，页面、JS、CSS 均返回 HTTP 200。第 27 页三类直接改错：开关与原支路线互换、变阻器一上一下 A-C 接线、两灯并联均按学生真实边与节点求解；电源两极热点分开、接入电阻段高亮。浏览器专项 57/57、第 26 页 76/76、旧第 29 页 70/70、整章交互 102/102、科学 601/601、逐页 634/634，均无失败；提交 `686f218`，Cloudflare [固定预览](https://ac4b0b7b.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 已成功部署且页面、JS、CSS 均返回 HTTP 200。第 28 页三类短路改错在工作树完成：右键直接删导线、触屏点线后删、复合题选表交换极性，灯泡不能删除；Chrome 1920×1080、1366×768、WebKit 横屏专项 63/63，第 26 页 76/76、第 27 页 57/57、旧第 29 页 70/70、整章交互 99/99、科学 601/601、逐页 634/634，失败均 0。真实截图在本地忽略目录 `test-results/v33-p28/`，待提交与候选预览。
 
@@ -10,9 +10,11 @@
 
 第 31 页最终回归：Chrome 1920×1080、1366×768 与 WebKit 844×390 触控专项 60/60；第 26—30 页分别 76/76、57/57、63/63、70/70、36/36；整章交互 Chrome 100/100、Chrome＋WebKit 205/205，科学 601/601，整章逐页 630/630，失败均 0。
 
-未完成：第 31 页候选预览；阶段 C/D、教师投屏与真实手机可读性审核。
+阶段 B 交付：第 31 页提交 `38721e0`，Cloudflare [固定预览](https://5b85df34.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 已成功部署，HTML、JS、CSS 均 HTTP 200；`main` 未变。
 
-下一步：按 `AGENTS.md` 提交并发布第 31 页候选预览，等待 Cloudflare 成功；随后从当前候选版安全创建阶段 C 分支，制作第 14 页自由接电压表，不动 `main`。
+未完成：阶段 C/D、教师投屏与真实手机可读性审核。
+
+下一步：从阶段 B 候选版安全创建阶段 C 分支和 Draft PR，制作第 14 页自由接电压表并测试，不动 `main`。
 
 ---
 # V3.3 电学整改进度（2026-10-19）
