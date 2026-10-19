@@ -32,3 +32,4 @@
 .p23-internal,.p23-holder-rail{fill:none;stroke:#18343f;stroke-width:2.5;stroke-linecap:round;pointer-events:none}.p23-holder-rail{stroke-width:4}.p23-apparatus .p23-cell{fill:#fff}.p23-range{font-size:13px;fill:#47636b;text-anchor:middle;pointer-events:none}
 .p21-symbol path,.p21-symbol circle{fill:none;stroke:#18343f;stroke-width:3;pointer-events:none}.p21-symbol text{font-size:20px;fill:#18343f;text-anchor:middle;pointer-events:none}
 .p23-junction-label{font-size:16px;fill:#096f70;text-anchor:middle;pointer-events:none}
+.p23-apparatus .p23-rheostat{fill:#fff6e9}.p23-resistor{fill:none;stroke:#7b8991;stroke-width:14;stroke-dasharray:8 3;pointer-events:none}.p23-slider{fill:none;stroke:#a04c14;stroke-width:4;pointer-events:none}.p23-segment{fill:none;stroke:#7b8991;stroke-width:5;pointer-events:none}.p23-segment.is-active{stroke:#d36a17;stroke-width:8}.p23-port-name{font-size:18px;font-weight:700;fill:#18343f;text-anchor:middle;pointer-events:none}
