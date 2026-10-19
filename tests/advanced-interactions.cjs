@@ -21,6 +21,14 @@ async function run(browser,name,viewport,mobile=false){const c=await browser.new
   check(await p.evaluate(()=>modelData.visibleCount===modelData.net.edges.length),name+' conversion all wires '+i);
   if(name==='chrome')await p.screenshot({path:path.join(out,`conversion-${i+1}.png`)});await p.locator('#reset').click();}
  for(const i of [25,26,27,28,29,30]){await p.evaluate(i=>goto(i),i);const cases=await p.locator('#experiment-controls select').locator('option').count();for(let k=0;k<cases;k++){await p.locator('#experiment-controls select').selectOption(String(k));check(await p.evaluate(()=>(experiments[page].edits||[]).length===0),name+' fresh case '+i+'-'+k);
+  if(i===25){
+   if(k<2){await p.locator('[data-action="ac:v33Start"]').first().click();check(await p.evaluate(()=>!!experiments[page].v33Pending),name+' lead selected '+i+'-'+k);const key=await p.evaluate(node=>AdvancedCircuits.terminals(modelData.net,false).find(t=>t.node===node).key,k===0?'b2b':'A0');await p.locator(`[data-action="ac:v33Term"][data-value="${key}"]`).click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' lead moved '+i+'-'+k);}
+   else{await p.locator('[data-v33-meter]').click();await p.locator(`[data-action="ac:${k===2?'v33Swap':'v33Range'}"]`).click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' meter corrected '+i+'-'+k);}
+   await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>typeof experiments[page].editMsg==='string'&&experiments[page].editMsg.length>0),name+' check feedback '+i+'-'+k);
+   await p.locator('[data-action="ac:undoEdit"]').click();check(await p.evaluate(()=>experiments[page].edits.length===0),name+' undo edit '+i+'-'+k);
+   await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.ac-compare svg').count()===2,name+' before-after '+i+'-'+k);
+   await p.locator('#reset').click();continue;
+  }
   // 点一根导线，选择删除，检查答案
   const hit=await p.locator('[data-action="ac:inspect"]:has(polyline)').first().evaluate(g=>{const q=g.querySelector('polyline').points,p=g.ownerSVGElement.createSVGPoint();p.x=(q[0].x+q[1].x)/2;p.y=(q[0].y+q[1].y)/2;const s=p.matrixTransform(g.ownerSVGElement.getScreenCTM());return {x:s.x,y:s.y};});
   if(mobile)await p.touchscreen.tap(hit.x,hit.y);else await p.mouse.click(hit.x,hit.y);
