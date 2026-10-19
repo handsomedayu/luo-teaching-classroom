@@ -25,7 +25,8 @@ async function desktop(browser,width,height){
     if(type==='SELECT'){if(await el.isDisabled()){await page.locator('#experiment-controls [data-action=closed]').click();}const options=await el.locator('option').evaluateAll(els=>els.map(e=>e.value));for(const option of options){await el.selectOption(option);check(await el.inputValue()===option,'选择参数 '+option);}}
     else {for(const end of ['min','max']){await el.evaluate((e,a)=>{e.value=e[a];e.dispatchEvent(new Event('input',{bubbles:true}));},end);await page.clock.runFor(32);check(Number(await el.inputValue())===Number(await el.getAttribute(end)),'滑片端点 '+end);}}
    }
-   const actions=await page.locator('#experiment-controls [data-action]').count();for(let k=0;k<actions;k++){await page.locator('#experiment-controls [data-action]').nth(k).click();await page.locator('#experiment-controls [data-action]').nth(k).click();check(true,'实验按钮 '+k);}
+   const actions=await page.locator('#experiment-controls [data-action]:not(:disabled)').evaluateAll(es=>es.map(e=>({action:e.dataset.action,value:e.dataset.value})));
+   for(const a of actions){const selector=`#experiment-controls [data-action=${JSON.stringify(a.action)}]${a.value===undefined?'':`[data-value=${JSON.stringify(a.value)}]`}`,button=page.locator(selector).first();if(!await button.count()||!await button.isEnabled())continue;await button.click();if(await button.count()&&await button.isEnabled())await button.click();check(true,'实验按钮 '+a.action);}
    check((await layout(page)).bad.length===0,'参数改变后布局');
    if(width===1366&&[0,Math.floor(chapter.pages/2),chapter.pages-1].includes(i))await page.screenshot({path:out+`/${chapter.id}-${i+1}.png`});
    if(i<chapter.pages-1){await page.locator('#next').click();check(await page.evaluate(()=>page)===i+1,'下一页');}

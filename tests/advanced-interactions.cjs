@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('fs'),path=require('path'),{chromium,webkit}=require('./browser.cjs');const root=path.resolve(__dirname,'../physics/grade-9/electricity-03'),out=path.resolve(__dirname,'../test-results/advanced-circuits');fs.mkdirSync(out,{recursive:true});const url='file:///'+root.replace(/\\/g,'/')+'/index.html',failed=[];let passed=0;function check(x,msg){if(x)passed++;else failed.push(msg);}
 async function run(browser,name,viewport,mobile=false){const c=await browser.newContext({viewport,isMobile:mobile,hasTouch:mobile});await c.route(/^https?:/,r=>r.abort());const p=await c.newPage();p.on('pageerror',e=>failed.push(name+' '+e.message));await p.goto(url);await p.waitForFunction(()=>typeof q==='function'&&lessons.length===34);
- for(const i of [20,21,22,23,24]){await p.evaluate(i=>goto(i),i);await p.locator('[data-action="ac:showRef"]').click();
+ for(const i of [20,21,23,24]){await p.evaluate(i=>goto(i),i);await p.locator('[data-action="ac:showRef"]').click();
   // 学生连线模式：点两个接线柱
   const terms=await p.locator('[data-action="ac:term"]').count();check(terms>0,name+' wiring terminals '+i);
   if(terms>=2){const pair=await p.evaluate(()=>{const net=AdvancedCircuits.make(lessons[page],experiments[page]),tm=AdvancedCircuits.terminals(net,true),w=AdvancedCircuits.requiredWires(net,true)[0];return [tm.find(t=>t.node===w.n1).key,tm.find(t=>t.node===w.n2).key];});
