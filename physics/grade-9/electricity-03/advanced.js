@@ -117,6 +117,8 @@ const AdvancedCircuits=(()=>{
    ['串联实物图怎样画成电路图？','series2','physical'],['双灯并联如何互画？','parallel2','schematic'],['含 A、V 的电路怎样互画？','seriesMeter','physical'],['滑动变阻器的接线怎样核对？','rheostat','schematic'],['多开关多电表怎样互画？','parallel3','physical']
   ].map(([title,config,from])=>config==='series2'
    ?intro(title,'对照已连好的串联实物，在右侧画出相同连接的电路图。',['先认清电源正负极和两只灯。','沿左侧实物导线找一条完整回路。','在右侧逐根画线，再核对两灯是否串联。'],config,{task:'convert',from,teacher:'左侧是已连接的实物，右侧让学生逐根画规范电路图；判断依据是学生刚画出的导线，未形成回路时不能显示通电。'})
+   :config==='parallel2'
+   ?intro(title,'照左侧电路图接线：干路 A₀ 和两条支路的 A₁、A₂怎样接？',['先连电源与干路电流表。','在分流点接出两条独立支路。','核对 A₀读数是否等于 A₁与 A₂之和。'],config,{task:'convert',from,teacher:'让学生先标分流点 B 和汇流点 R，再实际连接各支路。只按学生当前导线显示亮灯与表读数；6 V 理想电源、10 Ω/20 Ω 定值模型。'})
    :config==='seriesMeter'
    ?intro(title,'按左侧电路图接线：A 串在哪里？V 分别跨在哪里？',['先连电源、A 和两灯的主回路。','再把 V₁、V₂接在对应灯的两端。','检查正负接线柱与实际通路。'],config,{task:'convert',from,teacher:'先看左侧题图，让学生从电源正极沿主回路逐根接线；两只电压表分别跨接 L₁、L₂。学生接线与理想读数同步，接错后让学生自行查线；电源短路只在屏幕提示，禁止实物尝试。'})
    :intro(title,'先预测下一根导线，再点“连接下一根线”。',['识别元件与电源正负极。','沿导线找分流点、汇合点；逐根连接。','对照两图：每根线与电表端点必须相同。'],config,{task:'convert',from})),
@@ -165,7 +167,7 @@ const AdvancedCircuits=(()=>{
   return series();
  }
  function action(s,k,value,p){
-  if(['series2','seriesMeter'].includes(p?.config)&&k.startsWith('ac:p23')){p23Action(s,k,value,p.config);return;}
+  if(p?.task==='convert'&&['series2','parallel2','seriesMeter'].includes(p.config)&&k.startsWith('ac:p23')){p23Action(s,k,value,p.config);return;}
   if(k==='ac:inspect'){s.selected=value;s.guess=value;s.pendingOp=null;}
   else if(k==='ac:toggle'){s.switches[value]=!s.switches[value];}
   else if(k==='ac:wire'){s.wireCount++;}
@@ -188,7 +190,8 @@ const AdvancedCircuits=(()=>{
  }
  function render(p,s,q){
   // V3.1 整改：互画页学生模式走真实连线；改错页走真实改线
-  if(p.config==='series2'&&s.wireMode==='student')return renderP21(p,s,q);
+  if(p.task==='convert'&&p.config==='series2'&&s.wireMode==='student')return renderP21(p,s,q);
+  if(p.task==='convert'&&p.config==='parallel2'&&s.wireMode==='student')return renderP22(p,s,q);
   if(p.config==='seriesMeter'&&s.wireMode==='student')return renderP23(p,s,q);
   if(p.task==='convert'&&s.wireMode==='student')return renderWiringPage(p,s,q);
   if(p.task==='error')return renderEditPage(p,s,q);
@@ -583,6 +586,9 @@ const AdvancedCircuits=(()=>{
  const P21_PORTS=Object.fromEntries(['P','N','L1A','L1B','L2A','L2B'].map(k=>[k,P23_PORTS[k]]));
  const P21_GROUPS=[['P','L1A'],['L1B','L2A'],['L2B','N']];
  const P21_ANSWER=[['P','L1A'],['L1B','L2A'],['L2B','N']].map(([a,b],id)=>({id:'ref'+id,a,b}));
+ const P22_PORTS={P:[300,370],N:[460,370],A0P:[60,310],A0N:[200,310],B:[210,180],A1P:[270,105],A1N:[390,105],L1A:[470,105],L1B:[590,105],A2P:[270,235],A2N:[390,235],L2A:[470,235],L2B:[590,235],R:[670,180]};
+ const P22_GROUPS=[['P','A0P'],['A0N','A1P','A2P'],['A1N','L1A'],['A2N','L2A'],['L1B','L2B','N']];
+ const P22_ANSWER=[['P','A0P'],['A0N','B'],['B','A1P'],['B','A2P'],['A1N','L1A'],['A2N','L2A'],['L1B','R'],['L2B','R'],['R','N']].map(([a,b],id)=>({id:'ref'+id,a,b}));
  const P23_GROUPS=[['P','AP'],['AN','L1A','V1P'],['L1B','L2A','V1N','V2P'],['L2B','N','V2N']];
  const P23_ANSWER=[['P','AP'],['AN','L1A'],['L1B','L2A'],['L2B','N'],['L1A','V1P'],['L1B','V1N'],['L2A','V2P'],['L2B','V2N']].map(([a,b],id)=>({id:'ref'+id,a,b}));
  function p23Net(wires){
@@ -592,6 +598,23 @@ const AdvancedCircuits=(()=>{
  function p21Net(wires){
   const es=[edge('L1','L1A','L1B','lamp',[P21_PORTS.L1A,P21_PORTS.L1B],{r:10}),edge('L2','L2A','L2B','lamp',[P21_PORTS.L2A,P21_PORTS.L2B],{r:20})];
   return {edges:es.concat(wires.map(w=>edge('学生线'+w.id,w.a,w.b,'wire',[P21_PORTS[w.a],P21_PORTS[w.b]]))),U:6,kind:'series'};
+ }
+ function p22Net(wires){
+  const parts=[['A₀','A0P','A0N','ammeter'],['A₁','A1P','A1N','ammeter'],['A₂','A2P','A2N','ammeter'],['L1','L1A','L1B','lamp',10],['L2','L2A','L2B','lamp',20]];
+  const es=parts.map(([id,a,b,type,r])=>edge(id,a,b,type,[P22_PORTS[a],P22_PORTS[b]],r?{r}:{ }));
+  return {edges:es.concat(wires.map(w=>edge('学生线'+w.id,w.a,w.b,'wire',[P22_PORTS[w.a],P22_PORTS[w.b]]))),U:6,kind:'parallel'};
+ }
+ function p22Analyze(wires){
+  const net=p22Net(wires),result=solve(net),attached=new Set(wires.flatMap(w=>[w.a,w.b]));
+  const reading=(a,b,id)=>attached.has(a)&&attached.has(b)&&!result.sourceShort&&Number.isFinite(result.meter[id])?result.meter[id]:null;
+  return {net,result,readings:{A0:reading('A0P','A0N','A₀'),A1:reading('A1P','A1N','A₁'),A2:reading('A2P','A2N','A₂')}};
+ }
+ function p22Correct(wires,result){
+  if(result.sourceShort||Math.abs((result.total||0)-.9)>1e-6||Math.abs((result.meter['A₀']||0)-.9)>1e-6||Math.abs((result.meter['A₁']||0)-.6)>1e-6||Math.abs((result.meter['A₂']||0)-.3)>1e-6||!result.lit.L1||!result.lit.L2)return false;
+  const parent=Object.fromEntries(Object.keys(P22_PORTS).map(k=>[k,k]));
+  const find=k=>parent[k]===k?k:parent[k]=find(parent[k]);
+  for(const w of wires)parent[find(w.a)]=find(w.b);
+  return P22_GROUPS.every(g=>g.every(k=>find(k)===find(g[0])))&&P22_GROUPS.every((g,i)=>P22_GROUPS.slice(i+1).every(h=>find(g[0])!==find(h[0])));
  }
  function p21Analyze(wires){const net=p21Net(wires),result=solve(net);return {net,result};}
  function p21Correct(wires,result){
@@ -615,26 +638,36 @@ const AdvancedCircuits=(()=>{
   for(const w of wires)parent[find(w.a)]=find(w.b);
   return P23_GROUPS.every(g=>g.every(k=>find(k)===find(g[0])))&&P23_GROUPS.every((g,i)=>P23_GROUPS.slice(i+1).every(h=>find(g[0])!==find(h[0])));
  }
- function p23WirePath(w){
-  const a=P23_PORTS[w.a],b=P23_PORTS[w.b],k=pairKey(w.a,w.b);
-  if(k==='AP|P')return 'M300 370 L35 370 L35 120 L60 120';
-  if(k==='L1A|P')return 'M300 370 L205 370 L205 120 L270 120';
-  if(k==='L2B|N')return 'M610 120 L715 120 L715 370 L460 370';
+ function p23WirePath(w,ports=P23_PORTS){
+  const a=ports[w.a],b=ports[w.b],k=pairKey(w.a,w.b);
+  if(ports===P22_PORTS){
+   if(k==='A0P|P')return 'M300 370 L35 370 L35 310 L60 310';
+   if(k==='N|R')return 'M670 180 L715 180 L715 370 L460 370';
+  }
+  if(ports!==P22_PORTS){
+   if(k==='AP|P')return 'M300 370 L35 370 L35 120 L60 120';
+   if(k==='L1A|P')return 'M300 370 L205 370 L205 120 L270 120';
+   if(k==='L2B|N')return 'M610 120 L715 120 L715 370 L460 370';
+  }
   return `M${a[0]} ${a[1]} L${b[0]} ${b[1]}`;
  }
  function p23Physical(wires,s,readings,lit,mode='seriesMeter'){
-  const simple=mode==='series2',ports=simple?P21_PORTS:P23_PORTS;
-  const active=s.p23ShowAnswer?(simple?P21_ANSWER:P23_ANSWER):wires;
+  const simple=mode==='series2',parallelMode=mode==='parallel2',ports=simple?P21_PORTS:parallelMode?P22_PORTS:P23_PORTS;
+  const active=s.p23ShowAnswer?(simple?P21_ANSWER:parallelMode?P22_ANSWER:P23_ANSWER):wires;
   let g='<svg viewBox="0 0 760 420" role="img" aria-label="实物器材接线示意：点击两个接线柱连接导线">';
-  for(const w of active){const path=p23WirePath(w),selected=String(s.p23Selected)===String(w.id);
+  for(const w of active){const path=p23WirePath(w,ports),selected=String(s.p23Selected)===String(w.id);
    g+=`<g class="p23-wire${selected?' is-selected':''}${s.p23ShowAnswer?' is-answer':''}" data-p23-wire="${H(w.id)}"><path d="${path}" class="p23-wire-line"/><path d="${path}" class="p23-wire-hit"/><title>导线：右键删除；触屏点选后删除</title></g>`;}
   const meter=(x,y,label,reading,range)=>`<g class="p23-apparatus"><rect x="${x-47}" y="${y-38}" width="94" height="76" rx="8"/><path d="M${x-70} ${y}H${x-47} M${x+47} ${y}H${x+70}" class="p23-internal"/><path d="M${x-27} ${y+8}Q${x} ${y-29} ${x+27} ${y+8}" class="p23-dial"/><text x="${x}" y="${y-13}" class="p23-range">${range}</text><text x="${x}" y="${y+3}" class="p23-device-label">${label}</text><text x="${x}" y="${y+29}" class="p23-reading">${reading}</text></g>`;
-  const lamp=(x,label,lit)=>`<g class="p23-apparatus"><rect x="${x-48}" y="98" width="96" height="55" rx="7" class="p23-holder"/><circle cx="${x}" cy="107" r="24" class="p23-bulb${lit?' is-lit':''}"/><path d="M${x-60} 120H${x-40}L${x-25} 108H${x-12} M${x+12} 108H${x+25}L${x+40} 120H${x+60}" class="p23-internal"/><path d="M${x-12} 108 L${x-5} 100 L${x} 114 L${x+5} 100 L${x+12} 108" class="p23-filament"/><path d="M${x-26} 140h52" class="p23-holder-rail"/><text x="${x}" y="176" class="p23-device-label">${label}</text></g>`;
+  const lamp=(x,y,label,lit)=>`<g class="p23-apparatus"><rect x="${x-48}" y="${y-22}" width="96" height="55" rx="7" class="p23-holder"/><circle cx="${x}" cy="${y-13}" r="24" class="p23-bulb${lit?' is-lit':''}"/><path d="M${x-60} ${y}H${x-40}L${x-25} ${y-12}H${x-12} M${x+12} ${y-12}H${x+25}L${x+40} ${y}H${x+60}" class="p23-internal"/><path d="M${x-12} ${y-12} L${x-5} ${y-20} L${x} ${y-6} L${x+5} ${y-20} L${x+12} ${y-12}" class="p23-filament"/><path d="M${x-26} ${y+20}h52" class="p23-holder-rail"/><text x="${x}" y="${y+56}" class="p23-device-label">${label}</text></g>`;
   const fmt=(v,u)=>v==null?'—':v<-1e-8?'反接':v.toFixed(2)+' '+u;
-  if(!simple)g+=meter(130,120,'A',fmt(readings.A,'A'),'0—0.6 A');
-  g+=lamp(330,'L₁',lit.L1)+lamp(550,'L₂',lit.L2);
-  if(!simple)g+=meter(330,260,'V₁',fmt(readings.V1,'V'),'0—15 V')+meter(550,260,'V₂',fmt(readings.V2,'V'),'0—15 V');
+  if(parallelMode)g+=meter(130,310,'A₀',fmt(readings.A0,'A'),'0—3 A')+meter(330,105,'A₁',fmt(readings.A1,'A'),'0—0.6 A')+meter(330,235,'A₂',fmt(readings.A2,'A'),'0—0.6 A')+lamp(530,105,'L₁',lit.L1)+lamp(530,235,'L₂',lit.L2);
+  else{
+   if(!simple)g+=meter(130,120,'A',fmt(readings.A,'A'),'0—0.6 A');
+   g+=lamp(330,120,'L₁',lit.L1)+lamp(550,120,'L₂',lit.L2);
+   if(!simple)g+=meter(330,260,'V₁',fmt(readings.V1,'V'),'0—15 V')+meter(550,260,'V₂',fmt(readings.V2,'V'),'0—15 V');
+  }
   g+='<g class="p23-apparatus"><rect x="320" y="333" width="120" height="69" rx="9" class="p23-battery"/><path d="M300 370h35 M425 370h35" class="p23-internal"/><rect x="342" y="348" width="76" height="35" rx="4" class="p23-cell"/><text x="380" y="373" class="p23-device-label">电源 6 V</text></g>';
+  if(parallelMode)g+='<text x="210" y="159" class="p23-junction-label">分流点 B</text><text x="670" y="159" class="p23-junction-label">汇流点 R</text>';
   for(const [id,[x,y]]of Object.entries(ports)){
    const pending=s.p23Pending===id,mark=id.endsWith('P')||id==='P'||id==='AP',minus=id.endsWith('N')||id==='N'||id==='AN';
    g+=`<g class="p23-port${pending?' is-pending':''}" ${s.p23ShowAnswer?'':`data-action="ac:p23Term" data-value="${id}" tabindex="0" role="button" aria-label="${id} 接线柱"`}><circle cx="${x}" cy="${y}" r="22" class="p23-port-hit"/><circle cx="${x}" cy="${y}" r="8" class="p23-port-dot"/><text x="${x}" y="${y-14}" class="p23-port-label">${mark?'+':minus?'−':''}</text><title>${id} 接线柱</title></g>`;
@@ -664,6 +697,17 @@ const AdvancedCircuits=(()=>{
   const caption=s.p23Msg||(s.p23Pending?'已选第一个接线柱，再点第二个。':s.p23ShowAnswer?'标准电路图供教师对照。':q>=1?p.steps[Math.min(Math.floor(q)-1,p.steps.length-1)]:'对照左侧实物：在右侧依次点击两个接线柱画导线。');
   return {picture,controls,metrics,caption,data:{...result,net,correct,studentWires:s.p23Wires.map(w=>({...w})),showAnswer:s.p23ShowAnswer}};
  }
+ function renderP22(p,s,q){
+  const {net,result,readings}=p22Analyze(s.p23Wires),correct=p22Correct(s.p23Wires,result);
+  const reference=make(p,s),referenceSvg=draw(reference,solve(reference),{q:0,physical:false});
+  const answer=s.p23ShowAnswer?p22Analyze(P22_ANSWER):null;
+  const picture=`<div class="p23-board"><div class="p23-pane"><b>题目电路图</b>${referenceSvg}</div><div class="p23-pane"><b>${s.p23ShowAnswer?'标准实物接法':'你的实物接线'}</b>${p23Physical(s.p23Wires,s,answer?.readings||readings,answer?.result.lit||result.lit,'parallel2')}</div></div>`;
+  const total=result.sourceShort?'危险':Math.abs(result.total||0)<1e-8?'未形成通路':'有电流',val=v=>v==null?'—':v.toFixed(2)+' A';
+  const metrics=!s.p23ShowAnswer&&s.p23Wires.length?`<div class="readings p23-metrics"><span>电路状态<b>${total}</b></span><span>A₀<b>${val(readings.A0)}</b></span><span>A₁<b>${val(readings.A1)}</b></span><span>A₂<b>${val(readings.A2)}</b></span></div>`:'';
+  const controls=`<button data-action="ac:p23Check" class="primary">检查答案</button><button data-action="ac:p23Undo" ${s.p23History.length?'':'disabled'}>撤销</button><button data-action="ac:p23Reset">重置</button>${s.p23Selected!=null?'<button data-action="ac:p23Delete">删除选中导线</button>':''}<button data-action="ac:p23Answer">${s.p23ShowAnswer?'返回学生接线':'教师看标准接法'}</button><button data-action="ac:wireMode">教师演示模式</button>`;
+  const caption=s.p23Msg||(s.p23Pending?'已选第一个接线柱，再点第二个。':s.p23ShowAnswer?'标准接法供教师对照。':q>=1?p.steps[Math.min(Math.floor(q)-1,p.steps.length-1)]:'先找分流点 B、汇流点 R，再从电源正极逐根接线。');
+  return {picture,controls,metrics,caption,data:{...result,net,readings,correct,studentWires:s.p23Wires.map(w=>({...w})),showAnswer:s.p23ShowAnswer}};
+ }
  function renderP23(p,s,q){
   const {net,result,readings}=p23Analyze(s.p23Wires),correct=p23Correct(s.p23Wires,result);
   const reference=make(p,s),referenceSvg=draw(reference,solve(reference),{q:0,physical:false});
@@ -677,7 +721,7 @@ const AdvancedCircuits=(()=>{
   return {picture,controls,metrics,caption,data:{...result,net,readings,correct,studentWires:s.p23Wires.map(w=>({...w})),showAnswer:s.p23ShowAnswer}};
  }
  function p23Action(s,k,value,mode='seriesMeter'){
-  const simple=mode==='series2',ports=simple?P21_PORTS:P23_PORTS,analyze=simple?p21Analyze:p23Analyze;
+  const simple=mode==='series2',parallelMode=mode==='parallel2',ports=simple?P21_PORTS:parallelMode?P22_PORTS:P23_PORTS,analyze=simple?p21Analyze:parallelMode?p22Analyze:p23Analyze;
   const commit=next=>{s.p23History.push(s.p23Wires.map(w=>({...w})));s.p23Wires=next;s.p23Selected=null;s.p23Checked=false;s.p23ShowAnswer=false;};
   if(k==='ac:p23Term'){
    if(!ports[value])return;
@@ -699,7 +743,7 @@ const AdvancedCircuits=(()=>{
   }else if(k==='ac:p23Reset'){
    s.p23Wires=[];s.p23History=[];s.p23Pending=null;s.p23Selected=null;s.p23Checked=false;s.p23ShowAnswer=false;s.p23Msg='已重置，重新接线。';
   }else if(k==='ac:p23Check'){
-   const a=analyze(s.p23Wires),ok=simple?p21Correct(s.p23Wires,a.result):p23Correct(s.p23Wires,a.result);s.p23Checked=true;s.p23Msg=ok?simple?'接线正确：两灯与电源组成一条串联通路。':'接线正确：两灯成通路，A 串在主回路，V₁、V₂分别跨接对应灯。':a.result.sourceShort?'危险：电源短路。':!simple&&Object.values(a.readings).some(v=>v!=null&&v<-1e-8)?'有电表正负接线柱接反，请核对接线。':Math.abs(a.result.total||0)<1e-8?'还没有形成完整主回路，请从电源正极沿导线查到负极。':simple?'两灯应在同一条路径上，请核对导线端点。':'还需核对电表的连接节点和正负接线柱。';
+   const a=analyze(s.p23Wires),ok=simple?p21Correct(s.p23Wires,a.result):parallelMode?p22Correct(s.p23Wires,a.result):p23Correct(s.p23Wires,a.result);s.p23Checked=true;s.p23Msg=ok?simple?'接线正确：两灯与电源组成一条串联通路。':parallelMode?'接线正确：两灯分支并联，A₀＝A₁＋A₂。':'接线正确：两灯成通路，A 串在主回路，V₁、V₂分别跨接对应灯。':a.result.sourceShort?'危险：电源短路。':!simple&&!parallelMode&&Object.values(a.readings).some(v=>v!=null&&v<-1e-8)?'有电表正负接线柱接反，请核对接线。':Math.abs(a.result.total||0)<1e-8?'还没有形成完整主回路，请从电源正极沿导线查到负极。':simple?'两灯应在同一条路径上，请核对导线端点。':parallelMode?'请核对分流点 B、汇流点 R 和三只电流表所在路径。':'还需核对电表的连接节点和正负接线柱。';
   }else if(k==='ac:p23Answer'){s.p23ShowAnswer=!s.p23ShowAnswer;s.p23Pending=null;s.p23Selected=null;s.p23Msg=s.p23ShowAnswer?'这是标准实物接法；返回后可继续修改你的导线。':'';}
  }
  // ---- 改错页：真实改线 ----
@@ -905,7 +949,7 @@ const AdvancedCircuits=(()=>{
    if(r.ok)s.showParse=true;
  }
  if(typeof document!=='undefined'){
-   const p23Active=()=>typeof page!=='undefined'&&['series2','seriesMeter'].includes(lessons[page]?.config)&&experiments[page]?.wireMode==='student';
+   const p23Active=()=>typeof page!=='undefined'&&lessons[page]?.task==='convert'&&['series2','parallel2','seriesMeter'].includes(lessons[page].config)&&experiments[page]?.wireMode==='student';
    document.addEventListener('click',ev=>{
      if(!p23Active())return;
      const w=ev.target.closest?.('.p23-pane:nth-child(2) .p23-wire[data-p23-wire]');
