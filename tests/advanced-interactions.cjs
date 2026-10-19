@@ -38,6 +38,16 @@ async function run(browser,name,viewport,mobile=false){const c=await browser.new
    await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.ac-compare svg').count()===2,name+' before-after '+i+'-'+k);
    await p.locator('#reset').click();continue;
   }
+  if(i===27){
+   const id=k===1?'危险短接':'旁路线',pt=await p.locator(`[data-v33-delete="${id}"] .p28-wire-hit`).evaluate(e=>{const svg=e.ownerSVGElement,z=svg.createSVGPoint(),p=e.getPointAtLength(e.getTotalLength()*.48);z.x=p.x;z.y=p.y;const r=z.matrixTransform(svg.getScreenCTM());return{x:r.x,y:r.y};});
+   if(mobile){await p.touchscreen.tap(pt.x,pt.y);await p.locator('[data-action="ac:v33WireDelete"]').click();}else await p.mouse.click(pt.x,pt.y,{button:'right'});
+   check(await p.evaluate(()=>experiments[page].edits.length===1),name+' wire deleted '+i+'-'+k);
+   if(k===2){await p.locator('[data-v33-meter="V₁"]').click();await p.locator('[data-action="ac:v33Swap"]').click();}
+   await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>experiments[page].editDone),name+' direct short correction '+i+'-'+k);
+   await p.locator('[data-action="ac:undoEdit"]').click();if(k===2)await p.locator('[data-action="ac:undoEdit"]').click();check(await p.evaluate(()=>experiments[page].edits.length===0),name+' undo edit '+i+'-'+k);
+   await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.ac-compare svg').count()===2,name+' before-after '+i+'-'+k);
+   await p.locator('#reset').click();continue;
+  }
   // 点一根导线，选择删除，检查答案
   const hit=await p.locator('[data-action="ac:inspect"]:has(polyline)').first().evaluate(g=>{const q=g.querySelector('polyline').points,p=g.ownerSVGElement.createSVGPoint();p.x=(q[0].x+q[1].x)/2;p.y=(q[0].y+q[1].y)/2;const s=p.matrixTransform(g.ownerSVGElement.getScreenCTM());return {x:s.x,y:s.y};});
   if(mobile)await p.touchscreen.tap(hit.x,hit.y);else await p.mouse.click(hit.x,hit.y);

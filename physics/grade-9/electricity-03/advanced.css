@@ -38,3 +38,4 @@
 .p26-meter-tap{cursor:pointer;touch-action:manipulation}.p26-meter-ring{fill:none;stroke:#096f70;stroke-width:2;stroke-dasharray:5 5;pointer-events:none}
 .split:has(.p26-scene){display:block}.split:has(.p26-scene) .visual{width:100%;height:100%}.split:has(.p26-scene) .facts{display:none}.visual:has(.p26-scene) #visual-picture{flex:0 0 clamp(210px,31vh,340px);height:clamp(210px,31vh,340px);min-height:0}.p26-scene,.p26-scene>svg{width:100%;height:100%;min-height:0}
 .p27-active{pointer-events:none}.p27-rheostat .is-active{fill:#f9c35a;stroke:#a04c14}.p27-rheostat .is-pending .p26-dot{fill:#e69b33;stroke:#913d10}
+.p28-wire{cursor:pointer;touch-action:manipulation}.p28-wire-hit{pointer-events:stroke}.p28-wire-line{pointer-events:none}
