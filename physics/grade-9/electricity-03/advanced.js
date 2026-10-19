@@ -129,7 +129,7 @@ const AdvancedCircuits=(()=>{
  window.LESSON.pages.push(...pages);
  function initial(p){return {acCase:0,selected:'',guess:'',fixed:false,wireCount:0,
   wireMode:'student',showRef:true,userWires:[],pendingT:null,wireMsg:'',
-  edits:[],pendingOp:null,editMsg:'',editOk:false,editDone:false,showStd:false,showParse:false,p29Pending:null,p29Hint:0,p29Compare:false,
+  edits:[],pendingOp:null,editMsg:'',editOk:false,editDone:false,showStd:false,showParse:false,p29Pending:null,p29SelectedWire:null,p29Hint:0,p29Compare:false,
   switches:{'S₀':true,S1:true,S2:p.config==='parallelOpen'?false:true,S3:p.config==='parallelOpen',S4:false}};}
  function make(p,s){const cfg=p.config,chosen=p.cases?.[s.acCase]||cfg,fix=s.fixed;
   if(['parallel2','parallel3','parallelOpen','switchCombo','faultParallel'].includes(cfg)){
@@ -170,12 +170,13 @@ const AdvancedCircuits=(()=>{
   else if(k==='ac:wireUndo'){s.userWires.pop();s.wireMsg='';}
   else if(k==='ac:wireReset'){s.userWires=[];s.pendingT=null;s.wireMsg='';}
   else if(k==='ac:editOp'){actEditOp(s,p||{},value);}
-  else if(k==='ac:undoEdit'){(s.edits||[]).pop();s.editMsg='';s.editDone=false;s.showParse=false;s.p29Pending=null;s.p29Compare=false;}
-  else if(k==='ac:resetEdit'){s.edits=[];s.pendingOp=null;s.editMsg='';s.editDone=false;s.showStd=false;s.showParse=false;s.selected=null;s.p29Pending=null;s.p29Hint=0;s.p29Compare=false;}
+  else if(k==='ac:undoEdit'){(s.edits||[]).pop();s.editMsg='';s.editDone=false;s.editOk=false;s.showParse=false;s.p29Pending=null;s.p29SelectedWire=null;s.p29Compare=false;}
+  else if(k==='ac:resetEdit'){s.edits=[];s.pendingOp=null;s.editMsg='';s.editDone=false;s.editOk=false;s.showStd=false;s.showParse=false;s.selected=null;s.p29Pending=null;s.p29SelectedWire=null;s.p29Hint=0;s.p29Compare=false;}
   else if(k==='ac:check'){actCheck(s,p||{});}
   else if(k==='ac:stdShow'){s.showStd=!s.showStd;}
   else if(k==='ac:parse'){s.showParse=!s.showParse;}
   else if(k==='ac:p29hint'){s.p29Hint=Math.min(2,s.p29Hint+1);}
+  else if(k==='ac:p29delete'&&s.p29SelectedWire)p29Detach(s,p||{},s.p29SelectedWire.edge,s.p29SelectedWire.end);
   else if(k==='ac:p29compare'){s.p29Compare=!s.p29Compare;s.showStd=false;}
   else if(k==='ac:reset')Object.assign(s,initial(p||{}));
  }
@@ -356,7 +357,12 @@ const AdvancedCircuits=(()=>{
  function applyEdits(base,edits){
    const net={...base,edges:base.edges.map(e=>({...e,points:e.points.map(p=>p.slice())})),switches:{...(base.switches||{})}};
    for(const op of edits||[]){
-     if(op.op==='moveEnd'){
+     if(op.op==='detachLead'){
+       const e=net.edges.find(x=>x.id===op.edge);
+       if(e&&e.type==='voltmeter'&&op.end==='a'){
+         e.a='V1_FREE';e.positive='V1_FREE';e.points[0]=[e.points[0][0],e.points[0][1]-35];
+       }
+     }else if(op.op==='moveEnd'){
        const e=net.edges.find(x=>x.id===op.edge);
        if(!e)continue;
        const oldA=e.a,oldB=e.b,oldPts=e.points.map(p=>p.slice());
@@ -567,32 +573,40 @@ const AdvancedCircuits=(()=>{
  }
  // ---- 改错页：真实改线 ----
  function p29Overlay(net,s){
-   const targets=terminals(net,false).map(t=>`<g data-p29-target="${H(t.key)}"><circle class="p29-hit" cx="${t.x}" cy="${t.y}" r="23"/><circle class="p29-dot" cx="${t.x}" cy="${t.y}" r="8"/><title>目标接线柱</title></g>`).join('');
-   const origins=net.edges.filter(e=>e.type==='wire'||e.type==='voltmeter').flatMap(e=>['a','b'].map(end=>{
-     const ps=e.points,at=end==='a'?ps[0]:ps.at(-1),toward=(end==='a'?ps.slice(1):ps.slice(0,-1).reverse()).find(p=>p[0]!==at[0]||p[1]!==at[1]);
-     if(!toward)return '';
-     const d=Math.hypot(toward[0]-at[0],toward[1]-at[1]),k=Math.min(26/d,1),x=at[0]+(toward[0]-at[0])*k,y=at[1]+(toward[1]-at[1])*k;
-     const chosen=s.p29Pending?.edge===e.id&&s.p29Pending.end===end;
-     return `<g class="p29-origin${chosen?' is-selected':''}" data-p29-origin="${H(e.id)}" data-p29-end="${end}" data-ax="${at[0]}" data-ay="${at[1]}"><circle class="p29-hit" cx="${x}" cy="${y}" r="23"/><circle class="p29-dot" cx="${x}" cy="${y}" r="8"/><title>${H(e.id)} 接线端：点选或拖动</title></g>`;
-   })).join('');
-   return `<line class="p29-preview" x1="0" y1="0" x2="0" y2="0"/><g class="p29-targets${s.p29Pending?' is-visible':''}">${targets}</g><g class="p29-origins">${origins}</g>`;
+   const trace=(e,end,pts)=>`<g class="p29-wire${s.p29SelectedWire?.edge===e.id&&s.p29SelectedWire.end===end?' is-selected':''}" data-p29-wire="${H(e.id)}" data-p29-end="${end}">${poly(pts,'#087c83',4,'class="p29-wire-line"')}${poly(pts,'transparent',40,'class="p29-wire-hit"')}<title>${H(e.id)} 引线：右键断开；触屏先点选</title></g>`;
+   const wires=net.edges.filter(e=>e.type==='wire').map(e=>trace(e,'',e.points)).join('');
+   const v=net.edges.find(e=>e.id==='V₁'),ps=v.points,at=v.at;
+   const leads=trace(v,'a',[...ps.slice(0,2),[at[0]-26,at[1]]])+trace(v,'b',[[at[0]+26,at[1]],...ps.slice(2)]);
+   const terms=terminals(net,false).map(t=>`<g class="p29-term${s.p29Pending===t.key?' is-selected':''}${t.node==='V1_FREE'?' is-free':''}" data-p29-term="${H(t.key)}"><circle class="p29-hit" cx="${t.x}" cy="${t.y}" r="30"/><circle class="p29-dot" cx="${t.x}" cy="${t.y}" r="9"/><title>接线柱：点击选择</title></g>`).join('');
+   return `<g class="p29-wires">${wires}${leads}</g><g class="p29-terms">${terms}</g>`;
  }
- function p29Connect(s,p,edgeId,end,key){
-   s.p29Pending=null;
-   const rules=EDIT_RULES.oneMove,base=make(p,{...s,fixed:false}),net=applyEdits(base,s.edits||[]);
-   const e=net.edges.find(x=>x.id===edgeId),t=terminals(net,false).find(x=>x.key===key);
-   if((s.edits||[]).length>=rules.max)s.editMsg='本题只允许改动一根导线的一端；请先撤销或重置。';
-   else if(!e||!t)s.editMsg='没有落在有效接线柱上，请重试。';
-   else if(e.id!=='V₁')s.editMsg='本题要求改接电压表的引线；灯泡和其他导线保持原样。';
-   else if(t.node===e[end])s.editMsg='这根引线已经接在此处，请选择另一个接线柱。';
-   else if(t.node===e[end==='a'?'b':'a'])s.editMsg='电压表两端不能接到同一节点。';
+ function p29Detach(s,p,edgeId,end){
+   s.p29Pending=null;s.p29SelectedWire=null;
+   const e=make(p,{...s,fixed:false}).edges.find(x=>x.id===edgeId);
+   if(!e||e.type!=='wire'&&e.type!=='voltmeter')s.editMsg='只能删除导线，不能删除灯泡、电表或开关。';
+   else if((s.edits||[]).length)s.editMsg='本题只改一根线。要重新选，请先撤销或重置。';
+   else if(edgeId==='V₁'&&end==='b')s.editMsg='电压表这一端已经接对，应保持不变。';
    else{
-     const op={op:'moveEnd',edge:edgeId,end,toNode:t.node,toCoord:[t.x,t.y]},trial=applyEdits(base,[...(s.edits||[]),op]);
-     const verdict=checkEdit('oneMove',trial,solve(trial,trial.switches||{}));
-     if(verdict.ok){s.edits=[...(s.edits||[]),op];s.editMsg='已改接一端。请检查答案，或对照改前与当前电路。';s.editOk=false;s.editDone=false;s.showParse=false;s.showStd=false;s.p29Compare=false;return true;}
-     s.editMsg='这次接法未使电压表正确测量目标灯泡，两端节点或正负接线柱不符合题意；电路未改变。';
+     s.edits=[edgeId==='V₁'?{op:'detachLead',edge:'V₁',end:'a'}:{op:'delWire',edge:edgeId}];
+     s.editMsg=edgeId==='V₁'?'旧引线已断开；点自由端，再点新的接线柱。':'这根导线已删除，电路已改变；若不符合题意，可按 Ctrl+Z 撤销。';
+     s.editDone=false;s.editOk=false;s.showParse=false;s.showStd=false;s.p29Compare=false;
    }
-   s.editOk=false;return false;
+ }
+ function p29Term(s,p,key){
+   s.p29SelectedWire=null;
+   if(!s.p29Pending){s.p29Pending=key;s.editMsg='已选第一个接线柱；请点第二个。';return;}
+   const first=s.p29Pending;s.p29Pending=null;
+   if(first===key){s.editMsg='已取消选择。';return;}
+   const base=make(p,{...s,fixed:false}),net=applyEdits(base,s.edits||[]),ts=terminals(net,false),t1=ts.find(t=>t.key===first),t2=ts.find(t=>t.key===key),v=net.edges.find(e=>e.id==='V₁');
+   if(!t1||!t2){s.editMsg='请点击图上的圆形接线柱。';return;}
+   if((s.edits||[])[0]?.op==='moveEnd'||(s.edits||[])[0]?.op==='delWire'){s.editMsg='本题只改电压表的一根引线；如需重接，请先撤销。';return;}
+   let source=t1,target=t2;
+   if(target.node===v.a&&source.node!==v.a)[source,target]=[target,source];
+   if(source.node!==v.a){s.editMsg=t1.node===v.b||t2.node===v.b?'电压表这一端已经接对，应保持不变。':'请选择电压表需改接的引线端点。';return;}
+   if(target.node===v.a||target.node===v.b){s.editMsg='两端不能接在同一节点；接线未改变。';return;}
+   const op={op:'moveEnd',edge:'V₁',end:'a',toNode:target.node,toCoord:[target.x,target.y]},trial=applyEdits(base,[op]),result=solve(trial,trial.switches||{});
+   if(result.sourceShort){s.editMsg='这种接法会造成电源短路，未提交。';return;}
+   s.edits=[op];s.p29SelectedWire=null;s.editMsg='已接上新引线。请检查答案；若接错可按 Ctrl+Z 撤销。';s.editOk=false;s.editDone=false;s.showParse=false;s.showStd=false;s.p29Compare=false;
  }
  function renderEditPage(p,s,q){
    const caseName=p.cases?.[s.acCase]||p.config;
@@ -605,9 +619,9 @@ const AdvancedCircuits=(()=>{
      const bad=make(p,{...s,fixed:false}),rBad=solve(bad,bad.switches||{});
      const good=isP29&&s.p29Compare?net:make(p,{...s,fixed:true}),rGood=isP29&&s.p29Compare?result:solve(good,good.switches||{});
      const reading=n=>`V₁ ${n.meter['V₁']?.toFixed(2)??'—'} V`;
-     picture=`<div class="ac-fixwrap"><div class="ac-compare"><div><b>改前（错图）</b>${draw(bad,rBad,{q:1})}${isP29?`<small>${reading(rBad)}</small>`:''}</div><div><b>${isP29&&s.p29Compare?'当前（真实改线）':'改后（标准）'}</b>${draw(good,rGood,{q:2})}${isP29?`<small>${reading(rGood)}</small>`:''}</div></div></div>`;
+     picture=`<div class="ac-fixwrap"><div class="ac-compare"><div><b>改前（错图）</b>${draw(bad,rBad,{q:1})}${isP29?`<small>${reading(rBad)}</small>`:''}</div><div><b>${isP29&&s.p29Compare?'当前（真实改线）':'改后（标准）'}</b>${draw(good,rGood,{q:isP29?1:2})}${isP29?`<small>${reading(rGood)}</small>`:''}</div></div></div>`;
    }else{
-     picture=`<div class="ac-fixwrap">`+draw(net,result,{q,selected:s.selected,guess:s.selected});
+     picture=`<div class="ac-fixwrap">`+draw(net,result,{q:isP29?Math.min(q,1):q,selected:s.selected,guess:s.selected});
      if(isP29)picture=picture.replace(/<\/svg>\s*$/,p29Overlay(net,s)+'</svg>');
      else if(s.pendingOp==='moveA'||s.pendingOp==='moveB'){
        const tm=terminals(net,false);
@@ -619,10 +633,11 @@ const AdvancedCircuits=(()=>{
    const sel=net.edges.find(e=>e.id===s.selected);
    let controls='';
    if(p.cases&&!isP29)controls+=`<label>错图类型 <select data-var="acCase" aria-label="错图类型">${p.cases.map((x,i)=>`<option value="${i}" ${s.acCase===i?'selected':''}>${i+1}号原创模拟题</option>`).join('')}</select></label>`;
-   controls+=`<div class="edit-hint">任务：${isP29?'使电压表测 L₂ 两端电压；只移动一根导线的一端':H(rules.hint)}（限改 ${rules.max} 次，已用 ${(s.edits||[]).length} 次）</div>`;
+   controls+=`<div class="edit-hint">任务：${isP29?'使电压表测 L₂ 两端电压；只改接一根引线的一端':H(rules.hint)}（限改 ${rules.max} 次，已完成 ${isP29?(s.edits||[]).filter(e=>e.op==='moveEnd').length:(s.edits||[]).length} 次）</div>`;
    if(isP29){
      controls+=`<div class="p29-actions"><button data-action="ac:check" class="primary">检查答案</button><button data-action="ac:undoEdit">撤销</button><button data-action="ac:resetEdit">重置</button></div>`;
-     controls+=`<div class="edit-hint">${s.p29Pending?'已选一个端点：现在点目标接线柱；也可点另一端点重新选择。':'拖动导线端点到接线柱，或先点端点、再点接线柱。'}</div>`;
+     controls+=`<div class="edit-hint">${s.p29Pending?'已选第一个接线柱；再点第二个即可连线。':(s.edits||[])[0]?.op==='detachLead'?'旧引线已断开；点自由端，再点新的接线柱。':'左键依次点两个接线柱即可改线；右键点导线可断开。触屏先点导线再点“删除选中导线”。'} Ctrl+Z 可撤销。</div>`;
+     if(s.p29SelectedWire)controls+=`<button data-action="ac:p29delete">删除选中导线</button>`;
      if(s.p29Hint)controls+=`<div class="edit-hint">提示 ${s.p29Hint}：${s.p29Hint===1?'先沿导线找电压表现在跨接的两点，再找目标灯泡的两端。':'比较两组端点；已经接对的一端不用移动，并检查正负接线柱。'}</div>`;
      controls+=`<button data-action="ac:p29hint" ${s.p29Hint>=2?'disabled':''}>提示${s.p29Hint?`（${s.p29Hint}/2）`:''}</button>`;
      if((s.edits||[]).length)controls+=`<button data-action="ac:p29compare">${s.p29Compare?'返回当前电路':'对照改前与当前'}</button>`;
@@ -645,7 +660,7 @@ const AdvancedCircuits=(()=>{
    let caption;
    if(s.showParse)caption='解析：'+(EXPLANATIONS[caseName]||'');
    else if(s.editDone)caption='已通过检查。可对照标准改法，或重置后换一种改法试试。';
-   else caption=isP29?'先判断电压表现在测哪一段，再亲手改接一端；松开到接线柱后才会改变电路。':'先观察错在哪里：点击可疑的导线或元件，再选择改线操作；改完点“检查答案”。';
+   else caption=isP29?'先判断电压表现在测哪一段，再点击两个接线柱改接一端；已接对的一端保持不变。':'先观察错在哪里：点击可疑的导线或元件，再选择改线操作；改完点“检查答案”。';
    if(result.sourceShort)caption+=' 注意：当前存在电源短路（危险，仅屏幕模拟）。';
    const before=isP29?solve(make(p,{...s,fixed:false})):null;
    const metrics=isP29&&(q>=2||(s.edits||[]).length)?`<div class="readings"><span>原图 V₁<b>${before.meter['V₁'].toFixed(2)} V</b></span><span>当前 V₁<b>${result.meter['V₁'].toFixed(2)} V</b></span><span>当前干路 I<b>${result.total.toFixed(2)} A</b></span></div>`:'';
@@ -749,50 +764,35 @@ const AdvancedCircuits=(()=>{
    const caseName=p.cases?.[s.acCase]||p.config;
    const net=applyEdits(make(p,{...s,fixed:false}),s.edits||[]);
    const res=solve(net,net.switches||{});
-   const r=checkEdit(caseName,net,res);
+   let r=checkEdit(caseName,net,res);
+   if(caseName==='oneMove'){
+     const op=(s.edits||[])[0],original=make(p,{...s,fixed:false}).edges.find(e=>e.id==='V₁'),v=net.edges.find(e=>e.id==='V₁');
+     if(op?.op==='detachLead')r={ok:false,msg:'旧线已断开，还要把自由端接到新接线柱。'};
+     else if(!op||op.op!=='moveEnd'||op.edge!=='V₁'||op.end!=='a'||v.b!==original.b||v.positive!==v.a)r={ok:false,msg:'只能改接电压表的一端，原来接对的一端必须保留。'};
+   }
    s.editMsg=(r.ok?'✓ ':'✗ ')+r.msg;s.editOk=r.ok;s.editDone=r.ok;
    if(r.ok)s.showParse=true;
  }
  if(typeof document!=='undefined'){
-   let drag=null;
    const active=()=>typeof page!=='undefined'&&lessons[page]?.config==='oneMove';
-   const svgPoint=(svg,x,y)=>{const p=svg.createSVGPoint();p.x=x;p.y=y;const q=p.matrixTransform(svg.getScreenCTM().inverse());return [q.x,q.y];};
-   const nearest=(svg,x,y)=>{const [px,py]=svgPoint(svg,x,y);let best=null,dist=27;
-     for(const g of svg.querySelectorAll('[data-p29-target]')){const c=g.querySelector('.p29-dot'),d=Math.hypot(px-Number(c.getAttribute('cx')),py-Number(c.getAttribute('cy')));if(d<dist){best=g.dataset.p29Target;dist=d;}}
-     return best;
-   };
-   document.addEventListener('pointerdown',ev=>{
+   document.addEventListener('click',ev=>{
      if(!active())return;
-     const o=ev.target.closest?.('[data-p29-origin]');if(!o)return;
-     ev.preventDefault();drag={pointerId:ev.pointerId,edge:o.dataset.p29Origin,end:o.dataset.p29End,svg:o.ownerSVGElement,x:ev.clientX,y:ev.clientY};
-     o.setPointerCapture?.(ev.pointerId);
-     drag.svg.querySelector('.p29-targets')?.classList.add('is-visible');
-     const line=drag.svg.querySelector('.p29-preview');line.setAttribute('x1',o.dataset.ax);line.setAttribute('y1',o.dataset.ay);line.setAttribute('x2',o.dataset.ax);line.setAttribute('y2',o.dataset.ay);
+     const term=ev.target.closest?.('[data-p29-term]'),wire=ev.target.closest?.('[data-p29-wire]');
+     if(!term&&!wire)return;
+     pause();const s=experiments[page];
+     if(term)p29Term(s,lessons[page],term.dataset.p29Term);
+     else{s.p29SelectedWire={edge:wire.dataset.p29Wire,end:wire.dataset.p29End};s.p29Pending=null;s.editMsg='已选中导线；触屏可点“删除选中导线”。';}
+     window.render();
    });
-   document.addEventListener('pointermove',ev=>{
-     if(!drag||ev.pointerId!==drag.pointerId)return;
-     const [x,y]=svgPoint(drag.svg,ev.clientX,ev.clientY),line=drag.svg.querySelector('.p29-preview');
-     line.setAttribute('x2',x);line.setAttribute('y2',y);line.classList.add('is-visible');
-     const key=nearest(drag.svg,ev.clientX,ev.clientY);
-     for(const g of drag.svg.querySelectorAll('[data-p29-target]'))g.classList.toggle('is-near',g.dataset.p29Target===key);
+   document.addEventListener('contextmenu',ev=>{
+     if(!active()||!ev.target.closest?.('.ac-fixwrap svg'))return;
+     ev.preventDefault();const wire=ev.target.closest?.('[data-p29-wire]');if(!wire)return;
+     pause();p29Detach(experiments[page],lessons[page],wire.dataset.p29Wire,wire.dataset.p29End);window.render();
    });
-   document.addEventListener('pointerup',ev=>{
-     if(!active())return;
-     const s=experiments[page],p=lessons[page];
-     if(drag&&ev.pointerId===drag.pointerId){
-       const d=drag;drag=null;pause();
-       if(Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>8){
-         const key=nearest(d.svg,ev.clientX,ev.clientY);if(key)p29Connect(s,p,d.edge,d.end,key);
-         else{s.p29Pending=null;s.editMsg='请把端点松开在圆形接线柱上；电路没有改变。';s.editOk=false;}
-       }else{
-         s.p29Pending=s.p29Pending?.edge===d.edge&&s.p29Pending.end===d.end?null:{edge:d.edge,end:d.end};s.editMsg='';
-       }
-       window.render();return;
-     }
-     const target=ev.target.closest?.('[data-p29-target]');
-     if(target&&s.p29Pending){pause();p29Connect(s,p,s.p29Pending.edge,s.p29Pending.end,target.dataset.p29Target);window.render();}
+   document.addEventListener('keydown',ev=>{
+     if(!active()||!(ev.ctrlKey||ev.metaKey)||ev.shiftKey||ev.key.toLowerCase()!=='z')return;
+     ev.preventDefault();pause();action(experiments[page],'ac:undoEdit','',lessons[page]);window.render();
    });
-   document.addEventListener('pointercancel',ev=>{if(drag&&ev.pointerId===drag.pointerId){drag=null;if(active())window.render();}});
  }
  return {initial,render,action,solve,parallel,series,make,pages,terminals,requiredWires,validateWire,applyEdits,checkEdit,describeMeasure,powered,EDIT_RULES,EXPLANATIONS,inSeriesTopo,seriesLoadsTopo,measuresLoad};
 })();

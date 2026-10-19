@@ -16,16 +16,12 @@
 .visual:has(.ac-fixwrap) .ac-fixwrap{height:100%;width:100%}
 .visual:has(.ac-fixwrap) .ac-compare svg{height:180px}
 .visual:has(.ac-fixwrap) #experiment-controls{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;align-content:flex-start;scrollbar-gutter:stable}
-.p29-origin,.p29-targets g{cursor:grab;touch-action:none}
-.ac-fixwrap svg:has(.p29-origins),.p29-hit{touch-action:none}
+.p29-wire,.p29-term{cursor:pointer;touch-action:manipulation}
 .p29-hit{fill:transparent;pointer-events:all}
-.p29-origin .p29-dot{fill:#fff;stroke:#096f70;stroke-width:3;pointer-events:none}
-.p29-origin.is-selected .p29-dot{fill:#f5aa36;stroke:#8a420b}
-.p29-targets{visibility:hidden;pointer-events:none}
-.p29-targets.is-visible{visibility:visible;pointer-events:auto}
-.p29-targets .p29-dot{fill:#fff;stroke:#a04c14;stroke-width:3;pointer-events:none}
-.p29-targets .is-near .p29-dot{fill:#f5aa36;stroke-width:5}
-.p29-preview{visibility:hidden;pointer-events:none;stroke:#a04c14;stroke-width:5;stroke-dasharray:10 7}
-.p29-preview.is-visible{visibility:visible}
+.p29-term .p29-dot{fill:#fff;stroke:#087c83;stroke-width:3.5;pointer-events:none}
+.p29-term.is-selected .p29-dot,.p29-term.is-free .p29-dot{fill:#f5aa36;stroke:#8a420b;stroke-width:4}
+.p29-wire-line{opacity:.85;pointer-events:none}
+.p29-wire-hit{pointer-events:stroke}
+.p29-wire.is-selected .p29-wire-line{stroke:#d06b17;stroke-width:7}
 .ac-compare small{display:block;font-size:16px;color:#096f70}
 .p29-actions{display:flex;flex-wrap:wrap;gap:4px}
