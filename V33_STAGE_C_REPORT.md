@@ -1,6 +1,6 @@
 # V3.3 阶段 C｜第三章第 14 页自由接电压表
 
-候选分支 `codex/v33-stage-c`，[Draft PR #16](https://github.com/handsomedayu/luo-teaching-classroom/pull/16)，基于阶段 B 的 `db210c0`。本阶段只调整第三章第 14 页及相应测试；正式 `main`、公开网站和其他学科未改动。
+候选分支 `codex/v33-stage-c`，[Draft PR #16](https://github.com/handsomedayu/luo-teaching-classroom/pull/16)，基于阶段 B 的 `db210c0`。提交 `bf948bc` 的 [固定预览](https://a9181cbf.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 已成功部署；Chrome 实际访问并接表验证 V＝1.00 V、主回路 0.10 A、无脚本错误。本阶段只调整第三章第 14 页及相应测试；正式 `main`、公开网站和其他学科未改动。
 
 旧页预先画好三只电压表，让学生识图。新版保留三灯串联基础回路，只给一只初始悬空的电压表。左键点 V+ / V−，再点 A/B/C/D 接线点；右键断开已有引线，触屏先选线再点断开；支持撤销、重置、Ctrl+Z。两笔接妥后先选预测对象，再点“验证”。未接妥或尚未验证时读数显示“—”，不先显示答案；按实际端点归纳测量对象，不从电压数值倒推。
 
