@@ -50,18 +50,19 @@ function check(c,edits){const {net}=errNet(c);const n2=A.applyEdits(net,edits);r
   }
   // 完整正确连线走 action 流程
   const s2=A.initial(p);s2.wireMode='student';s2.showRef=false;
-  const net2=A.make(p,s2),tm2=A.terminals(net2,true);
-  const byNode={};for(const t of tm2)byNode[t.node]=t.key;
-  for(const r of A.requiredWires(net2,true)){
-    A.action(s2,'ac:term',byNode[r.n1],p);
-    A.action(s2,'ac:term',byNode[r.n2],p);
+  for(const [a,b] of [['P','L1A'],['L1B','L2A'],['L2B','N']]){
+    A.action(s2,'ac:p23Term',a,p);
+    A.action(s2,'ac:p23Term',b,p);
   }
   const shown=A.render(p,s2,3);
-  assert(shown.data.done,`应全部连对 done=true（已连${shown.data.doneCount}/${shown.data.reqCount}）`);
-  assert(shown.picture.includes('<svg'));ok('学生模式全连对后显示对照');
+  assert(shown.data.correct,'实际学生拓扑应构成正确串联回路');
+  near(shown.data.total,.2);
+  assert(shown.picture.includes('<svg'));ok('学生真实串联接线与0.20 A读数一致');
   // 撤销
-  A.action(s2,'ac:wireUndo',null,p);
-  assert(A.render(p,s2,3).data.doneCount===shown.data.doneCount-1);ok('撤销上根导线');
+  A.action(s2,'ac:p23Undo',null,p);
+  const undone=A.render(p,s2,3).data;
+  assert(undone.studentWires.length===shown.data.studentWires.length-1&&!undone.correct);
+  near(undone.total,0);ok('撤销上根导线后实际回路断开');
 }
 
 // ---------- 二、改错：正确改法全部通过 ----------
