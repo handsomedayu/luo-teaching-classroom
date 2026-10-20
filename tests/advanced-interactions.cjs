@@ -60,8 +60,8 @@ async function run(browser,name,viewport,mobile=false){const c=await browser.new
    await p.locator('#reset').click();continue;
   }
   if(i===30){
-   await p.locator('[data-action="ac:v33Start"][data-value="A错|a"]').click();await p.locator('[data-action="ac:v33Term"][data-value="275,180"]').click();
-   await p.locator('[data-action="ac:v33Start"][data-value="A错|b"]').click();await p.locator('[data-action="ac:v33Term"][data-value="345,180"]').click();
+   await p.locator('[data-action="ac:v33Start"][data-value="A错|a"]').first().click();await p.locator('[data-action="ac:v33Term"][data-value="275,180"]').click();
+   await p.locator('[data-action="ac:v33Start"][data-value="A错|b"]').first().click();await p.locator('[data-action="ac:v33Term"][data-value="345,180"]').click();
    check(await p.evaluate(()=>experiments[page].edits.length===2&&Math.abs(modelData.total-1.1)<1e-6&&Math.abs(modelData.meter['A错']-.3)<1e-6),name+' real two-lead correction '+i);
    await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>experiments[page].editDone),name+' valid corrected topology '+i);
    await p.locator('[data-action="ac:undoEdit"]').click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' undo edit '+i);
