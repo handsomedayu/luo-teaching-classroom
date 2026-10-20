@@ -1,3 +1,16 @@
+# V3.3 第三阶段进度（2026-10-20）
+
+当前阶段：**C 已完成并通过自动回归，待教师审核；下一阶段 D**。阶段 B 第 26—31 页在 Draft PR #15 完成，候选提交 `db210c0`；Cloudflare [阶段 B 最新固定预览](https://54d14d8a.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 已成功部署，HTML/JS/CSS 均 HTTP 200。独立工作树与分支 `codex/v33-stage-c` 从该提交建立，[Draft PR #16](https://github.com/handsomedayu/luo-teaching-classroom/pull/16) 为审阅入口；不触碰 `main`、正式站或化学课件。
+
+已完成：核对 Issue #13 的阶段 C 要求、第 14 页原有静态模型与阶段 B Git 状态；编写 `V33_STAGE_C_PLAN.md` 并提交 `a86a3aa`。第 14 页已改为三灯基础回路与自由接 V 表笔，学生先预测再验证；实际接点送入现有求解器，未接妥显示“—”，同为 3 V 的不同测量对象按节点区分。发现 1920×1080 控件被截断并修复。Chrome 1920×1080、1366×768 与 WebKit 844×390 触控专项 54/54；阶段 B 各页专项 76/76、57/57、63/63、70/70、36/36、60/60；Chrome 整章交互 103/103、Chrome＋WebKit 211/211，Chrome 逐页 632/632、WebKit 横屏逐页 316/316，模型专项与科学 601/601 均通过，失败 0。报告见 `V33_STAGE_C_REPORT.md`，截图仅在本机忽略目录 `test-results/v33-p14/`。
+
+阶段 C 交付：第 14 页提交 `bf948bc`，Cloudflare [固定预览](https://a9181cbf.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 部署成功，HTML/JS/CSS 均 HTTP 200；Chrome 实际打开公开预览并接表，页面 14、V=1.00 V、主回路 0.10 A，无脚本错误。未上传测试截图。
+
+未完成：阶段 D 十章去重与教师审核。
+
+下一步：从阶段 C 候选版安全创建阶段 D 分支，先提交十章旧页→拟处理页对照表；涉及挪页删页时等待教师批准。
+
+---
 # V3.3 第二阶段进度（2026-10-20）
 
 当前阶段：**B 已完成并通过自动回归，待教师审核；下一阶段 C**。阶段 A 的第 21—25 页已在独立 Draft PR #14 提交并部署，最新固定预览 <https://2a64ee85.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/>（提交 `1204b94`，页面及脚本 HTTP 200）。新分支 `codex/v33-stage-b` 以该提交为基线，保留阶段 A 工作树与预览；[Draft PR #15](https://github.com/handsomedayu/luo-teaching-classroom/pull/15) 为本阶段审阅入口。

@@ -7,7 +7,10 @@ assert.strictEqual(pages.length,22);const page=c=>pages.find(p=>p.config===c);co
  const {result}=model('parallel2');near(result.total,.9);near(result.meter['A₀'],.9);near(result.meter.A1,.6);near(result.meter.A2,.3);
 }
 {
- const {result}=model('voltage3');near(result.total,.1);near(result.meter['V₁'],1);near(result.meter['V₂'],5);near(result.meter['V₃'],6);
+ const {result}=model('voltage3');near(result.total,.1);
+ for(const [a,b,v]of [['A','n1',1],['n1','n2',2],['n2','Z',3],['A','n2',3],['n1','Z',5],['A','Z',6],['Z','A',-6],['A','A',0]]){
+  const r=model('voltage3',{v14A:a,v14B:b}).result;near(r.total,.1);near(r.meter.V,v);
+ }
 }
 {
  const on=model('switchCombo'),local=model('switchCombo',{switches:{...A.initial(page('switchCombo')).switches,S3:true}}),danger=model('switchCombo',{switches:{...A.initial(page('switchCombo')).switches,S4:true}});

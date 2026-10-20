@@ -1,0 +1,93 @@
+{
+  "runId": "pr-20261020T133142Z-01a15982",
+  "sourceSha": "4065009cd72313b9bde436aec01ffb1e4a857191",
+  "recordedAt": "2026-10-20T13:39:43.4600346Z",
+  "note": "Local pre-commit tests; classroom source unchanged, test and evidence changes in working tree. Final SHA evidence is recorded by CI and post-commit manifest.",
+  "suites": {
+    "science-results.json": {
+      "passed": 601,
+      "failed": 0
+    },
+    "network.json": {
+      "passed": 935,
+      "failed": 0
+    },
+    "v33-p14/results.json": {
+      "passed": 57,
+      "failed": 0
+    },
+    "v32-p23/results.json": {
+      "passed": 122,
+      "failed": 0
+    },
+    "advanced-circuits/interactions-results.json": {
+      "passed": 211,
+      "failed": 0
+    },
+    "advanced-circuits/browser-results.json": {
+      "passed": 948,
+      "failed": 0
+    }
+  },
+  "sourceHashes": [
+    {
+      "sha256": "A97E4AF2D14E34C891F094D3F28D0DF9C4605F3110D4667EF0A29DB5B666DC7D",
+      "path": "physics/grade-9/electricity-03/advanced.js"
+    },
+    {
+      "sha256": "76788ADB257C660BDC8E581B74BF2E4AD78A236D42795DBFBA9E5B21DEB00A57",
+      "path": "physics/grade-9/electricity-03/advanced.css"
+    },
+    {
+      "sha256": "B430331412F1350C6134B655DC8F396C921068B00FA9659EBC30B203552EF4F8",
+      "path": "physics/grade-9/electricity-03/lesson.js"
+    },
+    {
+      "sha256": "028D7D8F288E387810928499E97AA57C57974313E00CB800204C0D403A3AC6B1",
+      "path": "tests/v33-p14.cjs"
+    },
+    {
+      "sha256": "61CAD4223D34966D4503C6C4A1755342F5222346C6E2FF9A78E092F5E71B8838",
+      "path": "tests/interact-circuits.cjs"
+    }
+  ],
+  "screenshots": [
+    {
+      "sha256": "5674749357EA775FBD70D435C90C3F5E8B357251471BB521609AEDE9994C8834",
+      "path": "test-results/v33-p14/initial-chrome-1366.png"
+    },
+    {
+      "sha256": "FB41690F91EF24DE544BECA5BEC06EEA01217EF51CCE8B9574D664B907CDD8CB",
+      "path": "test-results/v33-p14/initial-chrome-1920.png"
+    },
+    {
+      "sha256": "8AF9507691C782DCAF022270CD5F5CBD74B0BEBC78CDD184CA2DCD5A807BB513",
+      "path": "test-results/v33-p14/initial-webkit-touch-844.png"
+    },
+    {
+      "sha256": "E5BCCEE88FA6519F025F4347AD326859F8D5203B506B3AEECC1E1E4E986FC7EB",
+      "path": "test-results/v33-p14/L1-chrome-1366.png"
+    },
+    {
+      "sha256": "D4E9FD510128E957FF11FDF4CDFC7731A4EBC28E5194E8E4DBA8287C95987995",
+      "path": "test-results/v33-p14/L1-chrome-1920.png"
+    },
+    {
+      "sha256": "AC40A9E761BCD34D72E7E7660F15EDEF33F6CBCDA08CE63F9A440DAFC3D6295F",
+      "path": "test-results/v33-p14/L1-webkit-touch-844.png"
+    },
+    {
+      "sha256": "315EAFBF4596D1B6D2DCDFA942C6E251AA74B01F077C03464E88B8E155FD10E0",
+      "path": "test-results/v33-p14/reverse-chrome-1366.png"
+    },
+    {
+      "sha256": "0457167E71893F3A2E67FBF766C7B74D535FC524967EEC1D17953A17171E751D",
+      "path": "test-results/v33-p14/reverse-chrome-1920.png"
+    },
+    {
+      "sha256": "5A78174E5B659143F20723C4FB07EB94B7C7534C079A49DD611C06B2218FCDCB",
+      "path": "test-results/v33-p14/reverse-webkit-touch-844.png"
+    }
+  ],
+  "initialFailure": "interact-circuits.cjs obsolete ac:term/doneCount assertion; migrated to real wiring and retested 46/46"
+}

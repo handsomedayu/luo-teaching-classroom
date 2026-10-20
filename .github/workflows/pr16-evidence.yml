@@ -1,0 +1,36 @@
+name: PR16 classroom evidence
+on:
+  push:
+    branches: [codex/v33-stage-c]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  evidence:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated browser test runtime
+        shell: pwsh
+        run: |
+          $runtime = Join-Path $env:RUNNER_TEMP 'classroom-browser'
+          npm install --prefix $runtime --no-audit --no-fund playwright@1.62.1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:PLAYWRIGHT_PATH = Join-Path $runtime 'node_modules/playwright'
+          "PLAYWRIGHT_PATH=$env:PLAYWRIGHT_PATH" | Out-File -FilePath $env:GITHUB_ENV -Append
+          node (Join-Path $runtime 'node_modules/playwright/cli.js') install webkit
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run science and real browser regression
+        run: node tools/pr16-evidence.cjs
+      - name: Upload evidence for this exact commit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr16-evidence-${{ github.sha }}
+          path: test-results/
+          retention-days: 30
+          if-no-files-found: error
