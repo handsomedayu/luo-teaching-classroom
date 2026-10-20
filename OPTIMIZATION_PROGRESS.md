@@ -1,3 +1,15 @@
+# V3.3 第四阶段进度（2026-10-20）
+
+当前阶段：**D，十章内容复审；D0 旧页→拟处理页对照已完成，尚未改动课件**。独立工作树 `D:/小罗老师/classroom-v33-stage-d`、分支 `codex/v33-stage-d` 以阶段 C 的 `4065009` 为基线。阶段 C 这次进度提交的 [固定预览](https://b3cea650.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 已成功部署，HTML/JS/CSS HTTP 200；正式 `main` 和化学课件未动。
+
+已完成：重新解析十章 145 页并核对旧 `CONTENT_AUDIT_V32.md`；阶段 A—C 已修好的第 14、21—31 页保持原状。具体主讲、复习、独立变式和建议合并/调位列于 `V33_STAGE_D_AUDIT.md`。第 3-16—19、3-32—34 页如需合并或调位，先凭对照表等待教师批准；当前不改页数、目录或原物理模型。
+
+未完成：阶段 D 的逐章文字与科学复审、逐章浏览器回归和教师教学审核。
+
+下一步：先对第三章做不改页数的课堂语言与教师提示精炼，保持所有互动；测试后单独提交预览。随后按第四至十章逐章推进。涉及结构调整仍待教师确认。
+
+---
+
 # V3.3 第三阶段进度（2026-10-20）
 
 当前阶段：**C 已完成并通过自动回归，待教师审核；下一阶段 D**。阶段 B 第 26—31 页在 Draft PR #15 完成，候选提交 `db210c0`；Cloudflare [阶段 B 最新固定预览](https://54d14d8a.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/) 已成功部署，HTML/JS/CSS 均 HTTP 200。独立工作树与分支 `codex/v33-stage-c` 从该提交建立，[Draft PR #16](https://github.com/handsomedayu/luo-teaching-classroom/pull/16) 为审阅入口；不触碰 `main`、正式站或化学课件。
