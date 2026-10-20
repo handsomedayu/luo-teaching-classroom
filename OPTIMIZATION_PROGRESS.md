@@ -1,12 +1,14 @@
 # V3.3 第四阶段进度（2026-10-20）
 
-当前阶段：**D，十章内容复审；D0 对照已提交，D1 第三章原位文字核对与浏览器回归已完成，待预览交付**。独立工作树 `D:/小罗老师/classroom-v33-stage-d`、分支 `codex/v33-stage-d` 以阶段 C 的 `4065009` 为基线。[Draft PR #17](https://github.com/handsomedayu/luo-teaching-classroom/pull/17) 的审计提交 `d415463` 已成功构建 [固定预览](https://fefcdc4e.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/)；正式 `main` 和化学课件未动。
+当前阶段：**D，十章内容复审；D0 对照与 D1 第三章均已提交部署，D2 第四章原位复审测试完成、待提交**。独立工作树 `D:/小罗老师/classroom-v33-stage-d`、分支 `codex/v33-stage-d` 以阶段 C 的 `4065009` 为基线。[Draft PR #17](https://github.com/handsomedayu/luo-teaching-classroom/pull/17) 的第三章提交 `d381b25` 已成功构建 [固定预览](https://656273e1.luo-classroom-review.pages.dev/physics/grade-9/electricity-03/)；HTML/JS/CSS HTTP 200，正式 `main` 和化学课件未动。
 
 已完成：重新解析十章 145 页并核对旧 `CONTENT_AUDIT_V32.md`；阶段 A—C 已修好的第 14、21—31 页交互保持原状。具体主讲、复习、独立变式和建议合并/调位列于 `V33_STAGE_D_AUDIT.md`。第三章 1—12、13、15—20、26—33 页的教师提示按图逐页精炼；第 16 页去掉图中不存在的电压表读数推断，第 19 页标题与五种状态一致。第三章仍 34 页，目录、物理模型和所有交互不变。测试见 `V33_STAGE_D_CH3_REPORT.md`：科学 601/601、模型专项通过、Chrome＋WebKit 交互 211/211、34 页两种桌面尺寸与 WebKit 横屏逐页 948/948，失败 0；第 16/19 页真实截图已查看，截图仅在忽略目录。
 
-未完成：第三章文字候选版提交/Cloudflare 预览；第四至十章逐章科学与去重复审；教师教学审核。第 3-16—19、3-32—34 页如需合并或调位，先凭对照表等待教师批准。
+第四章 D2 已完成本地修改与测试：4-01—10、12 的教师提示逐页聚焦电表/实验目标，4-11 原位改为核对理想示例读数，不提前完整重讲 6-12/13 的计算；模型和数据均未变。科学 601/601；Chrome 两种桌面尺寸、Chrome 手机与 WebKit 横屏的 12 页浏览器回归 319/319，失败 0；第 11 页前后截图已目视核对。详见 `V33_STAGE_D_CH4_REPORT.md`。
 
-下一步：提交第三章语言候选版并核对 Cloudflare；随后从第四章开始逐章复审，不抢先执行待批准的结构调整。
+未完成：第四章候选版提交/Cloudflare 预览；第五至十章逐章科学与去重复审；教师教学审核。第 3-16—19、3-32—34 页如需合并或调位，先凭对照表等待教师批准。
+
+下一步：提交第四章候选版并核对 Cloudflare；随后从第五章继续，不抢先执行待批准的结构调整。
 
 ---
 
