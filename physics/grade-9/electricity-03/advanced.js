@@ -1055,20 +1055,20 @@ const AdvancedCircuits=(()=>{
   // Display-only projection: solver edges and terminal keys remain in the original model.
   // Keep the base terminals available after moving a lead, so undo/reconnect targets remain reachable.
   if(!['ammeterParallel','range','switchPlace'].includes(caseName))return draw(net,result,{q,selected:interactive?s.selected:'',hideWarning:!result.sourceShort||q===0&&!s.edits.length}).replace(/<\/svg>\s*$/,interactive?p26Overlay(net,s,caseName)+'</svg>':'</svg>');
-  const project=([x,y])=>[(x-100)*1000/550+80,y<=180?130+(y-105)*100/75:y<=270?230+(y-180)*40/90:y<=315?270+(y-270)*80/45:350+(y-315)*80/35];
+  const project=([x,y])=>[(x-100)*1000/550+80,caseName==='ammeterParallel'&&y<=105?130:y<=180?130+(y-105)*100/75:y<=270?230+(y-180)*40/90:y<=315?270+(y-270)*80/45:350+(y-315)*80/35];
   const display=n=>({...n,labels:Object.fromEntries(Object.entries(n.labels||{}).map(([k,v])=>[k,project(v)])),edges:n.edges.map(e=>({...e,spreadLabels:true,points:e.points.map(project),at:e.at?project(e.at):undefined}))});
   const visual=display(net),visualBase=display(base);
   const meter=visual.edges.find(e=>e.id==='A错');
-  if(meter){const a=meter.points[0],b=meter.points.at(-1);meter.points=[a,[a[0],a[1]+35],[30,a[1]+35],[30,65],[1160,65],[1160,b[1]+60],[b[0],b[1]+60],b];meter.at=[600,65];meter.axis='horizontal';}
-  const source=poly([[80,430],[550,430]])+poly([[590,430],[1080,430]])+'<path d="M550 402v56m40-45v34" stroke="'+C.ink+'" stroke-width="4"/>'+t(530,400,'+',24,C.orange)+t(610,400,'−',24,C.orange)+t(570,490,'电源 6 V',26);
-  let svg=draw(visual,result,{q,selected:interactive?s.selected:'',hideWarning:true,frame:{viewBox:caseName==='ammeterParallel'?'0 0 1200 520':'0 80 1200 440',source}});
+  if(meter){const a=meter.points[0],b=meter.points.at(-1),inBranch=pairKey(meter.a,meter.b)===pairKey('b2b','b2c');meter.points=inBranch?[a,b]:[a,[a[0],530],[b[0],530],b];meter.at=[(a[0]+b[0])/2,inBranch?a[1]:530];meter.axis='horizontal';}
+  const source=poly([[80,430],[550,430]])+poly([[590,430],[1080,430]])+'<path d="M550 402v56m40-45v34" stroke="'+C.ink+'" stroke-width="4"/>'+t(530,400,'+',24,C.orange)+t(610,400,'−',24,C.orange)+t(caseName==='ammeterParallel'?800:570,caseName==='ammeterParallel'?470:490,'电源 6 V',26);
+  let svg=draw(visual,result,{q,selected:interactive?s.selected:'',hideWarning:true,frame:{viewBox:caseName==='ammeterParallel'?(meter&&meter.at[1]===530?'0 70 1200 510':'0 70 1200 440'):'0 80 1200 440',source}});
   if(interactive){let overlay=caseName==='switchPlace'?p27Overlay(visual,s,caseName,visualBase):p26Overlay(visual,s,caseName);if(s.v33Pending){const old=[...terminals(base,false),...terminals(net,false)],mapped=[...terminals(visualBase,false),...terminals(visual,false)];for(let i=0;i<mapped.length;i++)overlay=overlay.replaceAll('data-value="'+mapped[i].key+'"','data-value="'+old[i].key+'"');}svg=svg.replace(/<\/svg>\s*$/,overlay+'</svg>');}
   return svg.replaceAll('font-size="19"','font-size="26"').replaceAll('font-size="18"','font-size="23"');
  }
  function renderP26(p,s,q){
   const caseName=p.cases[s.acCase];if(s.v33Case!==caseName){s.v33Case=caseName;s.v33Pending=null;s.v33Selected=null;s.v33RheoPending=null;}
   const net=applyEdits(make(p,{...s,fixed:false}),s.edits),result=solve(net,net.switches||{}),bad=layoutP26Voltage(make(p,{...s,fixed:false})),good=s.showStd?layoutP26Voltage(make(p,{...s,fixed:true})):null;
-  const picture=s.showStd?`<div class="ac-fixwrap p26-scene batch1-scene"><div class="ac-compare"><div><b>原错图</b>${p26Diagram(bad,solve(bad,bad.switches||{}),s,caseName,false,1)}</div><div><b>标准改法</b>${p26Diagram(good,solve(good,good.switches||{}),s,caseName,false,1)}</div></div></div>`:`<div class="ac-fixwrap p26-scene batch1-scene">${p26Diagram(net,result,s,caseName,true,s.edits.length?2:Math.min(q,1))}</div>`;
+  const picture=`<div class="ac-fixwrap p26-scene batch1-scene">${s.showStd?p26Diagram(good,solve(good,good.switches||{}),s,caseName,false,1):p26Diagram(net,result,s,caseName,true,s.edits.length?2:Math.min(q,1))}</div>`;
   const names=['电流表误并联','电压表误串联','电压表正负接反','电流表量程不当'];
   let controls=`<label>错图类型 <select data-var="acCase" aria-label="错图类型">${names.map((name,i)=>`<option value="${i}" ${i===s.acCase?'selected':''}>${name}</option>`).join('')}</select></label><button data-action="ac:check" class="primary">检查答案</button><button data-action="ac:undoEdit" ${s.edits.length?'':'disabled'}>撤销</button><button data-action="ac:resetEdit">重置</button>`;
   if(s.v33Selected)controls+='<button data-action="ac:v33Detach">断开选中引线</button>';
@@ -1081,7 +1081,7 @@ const AdvancedCircuits=(()=>{
   const caption=s.showParse?'解析：'+EXPLANATIONS[caseName]:s.v33Pending?'已选电表引线端点，请点目标接线柱。':s.editDone?'已通过检查；可以重置再试。':q===0&&!s.edits.length?prompt:caseName==='reverse'||caseName==='range'?'点击题目电表，使用快捷按钮后核对读数。':'直接点错误电表的一端，再点目标接线柱；右键引线可断开，触屏先选线。';
   const vm=caseName==='voltmeterSeries'?describeMeasure(net,result,'V错'):null;
   const metrics=q>=1||s.edits.length?`<div class="readings"><span>电路状态<b>${result.sourceShort?'电源短路（屏幕模拟）':Math.abs(result.total||0)<1e-8?'无电流':'有电流'}</b></span><span>干路电流<b>${result.sourceShort?'—':(result.total||0).toFixed(2)+' A'}</b></span>${vm?`<span>电压表 · ${vm.loads.length?H(vm.loads.join('、'))+'两端':'当前两接点'}<b>${s.edits.some(e=>e.op==='detachLead')||!Number.isFinite(result.meter['V错'])?'—':result.meter['V错'].toFixed(2)+' V'}</b></span>`:''}</div>`:'';
-  return {picture,controls,metrics:s.showStd?'':metrics,caption:(result.sourceShort&&(q>=1||s.edits.length)&&!s.showStd?'危险：电源短路，仅屏幕模拟，禁止实物接线。 ':'')+(s.showStd?'原错图与标准改法；请比较器材接法和完整回路。':caption),data:{net,caseName,sourceShort:result.sourceShort,total:result.total,lit:result.lit,meter:result.meter,edits:s.edits.map(x=>({...x})),editDone:s.editDone}};
+  return {picture,controls,metrics:s.showStd?'':metrics,caption:(result.sourceShort&&(q>=1||s.edits.length)&&!s.showStd?'危险：电源短路，仅屏幕模拟，禁止实物接线。 ':'')+(s.showStd?'教师标准改法；点击“返回当前电路”继续操作。':caption),data:{net,caseName,sourceShort:result.sourceShort,total:result.total,lit:result.lit,meter:result.meter,edits:s.edits.map(x=>({...x})),editDone:s.editDone}};
  }
  function p27Overlay(net,s,caseName,base){
   if(caseName!=='rheostatWrong'){

@@ -27,7 +27,7 @@ async function run(browser,name,viewport,mobile=false){const c=await browser.new
    else{await p.locator('[data-v33-meter]').click();await p.locator(`[data-action="ac:${k===2?'v33Swap':'v33Range'}"]`).click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' meter corrected '+i+'-'+k);}
    await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>typeof experiments[page].editMsg==='string'&&experiments[page].editMsg.length>0),name+' check feedback '+i+'-'+k);
    await p.locator('[data-action="ac:undoEdit"]').click();check(await p.evaluate(()=>experiments[page].edits.length===0),name+' undo edit '+i+'-'+k);
-   await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.ac-compare svg').count()===2,name+' before-after '+i+'-'+k);
+   await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.p26-scene svg').count()===1&&await p.locator('.ac-compare').count()===0,name+' single teacher diagram '+i+'-'+k);
    await p.locator('#reset').click();continue;
   }
   if(i===26){
