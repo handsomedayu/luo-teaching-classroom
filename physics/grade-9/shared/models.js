@@ -151,12 +151,14 @@ function renderModel(p,s,q){
   result.metrics=stats([['U₁',fmt(Ur)+' V'],['I',fmt(I)+' A'],['U₁/I',I?fmt(Ur/I)+' Ω':'—'],['目标3 V',Math.abs(Ur-3)<.01?'已达到':'尚未达到']]);result.data={I,U:Ur,R};break;}
  case 'graph':{
   const nonlinear=p.graph==='lamp',compare=p.graph==='compare',points=nonlinear?[[0,0],[.5,.13],[1,.19],[1.5,.235],[2,.27],[2.5,.3]]:[[0,0],[1,.1],[2,.2],[3,.3]];
-  let g=path('M120 55V325H650')+tx(85,60,'I / A',22)+tx(665,350,'U / V',22);for(let i=0;i<=3;i++)g+=tx(120+i*150,355,i,22)+tx(80,332-i*80,fmt(i*.1),20);
-  g+=`<polyline points="${points.map(([x,y])=>[120+x*150,325-y*800]).join(' ')}" fill="none" stroke="${teal}" stroke-width="4"/>`;
-  if(compare)g+=line(120,325,570,205,orange,4)+tx(565,190,'20 Ω',22,orange)+tx(560,75,'10 Ω',22,teal);
-  for(const [x,y]of points)g+=`<circle cx="${120+x*150}" cy="${325-y*800}" r="5" fill="${teal}"/>`;
-  result.picture=svg(g);result.caption=nonlinear?'灯丝示例数据（非实测），不是过原点直线。':'定值电阻理想数据；横轴电压，纵轴电流。';
-  result.metrics='<table class="data-table"><tr><th>U / V</th>'+points.slice(1).map(x=>'<td>'+x[0]+'</td>').join('')+'</tr><tr><th>I / A</th>'+points.slice(1).map(x=>'<td>'+fmt(x[1],3)+'</td>').join('')+'</tr></table>';break;}
+  const reversed=compare&&s.axis==='UI',plot=([U,I])=>reversed?[120+I*1500,325-U*80]:[120+U*150,325-I*800];
+  let g=path('M120 55V325H650')+tx(85,60,reversed?'U / V':'I / A',22)+tx(665,350,reversed?'I / A':'U / V',22);
+  for(let i=0;i<=3;i++)g+=tx(120+i*150,355,reversed?fmt(i*.1):i,22)+tx(80,332-i*80,reversed?i:fmt(i*.1),20);
+  g+=`<polyline points="${points.map(plot).join(' ')}" fill="none" stroke="${teal}" stroke-width="4"/>`;
+  if(compare){const [x,y]=plot([3,.15]);g+=line(120,325,x,y,orange,4)+tx(reversed?355:565,reversed?75:190,'20 Ω',22,orange)+tx(560,75,'10 Ω',22,teal);result.controls=select('axis','坐标轴',reversed?'UI':'IU',[['IU','横 U、纵 I'],['UI','横 I、纵 U']]);}
+  for(const [U,I]of points){const [x,y]=plot([U,I]);g+=`<circle cx="${x}" cy="${y}" r="5" fill="${teal}"/>`;}
+  result.picture=svg(g);result.caption=nonlinear?'灯丝示例数据（非实测），不是过原点直线。':compare?'定值电阻理想数据；切换坐标后，同一组数据的斜率含义不同。':'定值电阻理想数据；横轴电压，纵轴电流。';
+  result.metrics='<table class="data-table"><tr><th>U / V</th>'+points.slice(1).map(x=>'<td>'+x[0]+'</td>').join('')+'</tr><tr><th>I / A</th>'+points.slice(1).map(x=>'<td>'+fmt(x[1],3)+'</td>').join('')+'</tr></table>';result.data={axis:reversed?'UI':'IU'};break;}
  case 'safety':{
   const s2={...s,mode:'series'},m=Physics.circuit(s2),safe=m.I<=.400001&&(p.currentOnly||m.U2<=3.00001);
   result.picture=circuitDrawing(s2,{meter:true,variable:true},q);result.controls=range('r2','R₂ / Ω',s2.r2,0,20,.5);result.metrics=stats([['I≤0.4 A',fmt(m.I)+' A'],[p.currentOnly?'U₂（未加限制）':'U₂≤3 V',fmt(m.U2)+' V'],['是否同时满足',safe?'是':'否']]);result.data={...m,safe};break;}

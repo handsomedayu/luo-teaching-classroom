@@ -24,10 +24,10 @@ async function run(browser,name,viewport,mobile=false){const c=await browser.new
  for(const i of [25,26,27,28,29,30]){await p.evaluate(i=>goto(i),i);const select=p.locator('#experiment-controls select'),cases=Math.max(1,await select.locator('option').count());for(let k=0;k<cases;k++){if(await select.count())await select.selectOption(String(k));check(await p.evaluate(()=>(experiments[page].edits||[]).length===0),name+' fresh case '+i+'-'+k);
   if(i===25){
    if(k<2){await p.locator('[data-action="ac:v33Start"]').first().click();check(await p.evaluate(()=>!!experiments[page].v33Pending),name+' lead selected '+i+'-'+k);const key=await p.evaluate(node=>AdvancedCircuits.terminals(modelData.net,false).find(t=>t.node===node).key,k===0?'b2b':'A0');await p.locator(`[data-action="ac:v33Term"][data-value="${key}"]`).click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' lead moved '+i+'-'+k);}
-   else{await p.locator('[data-v33-meter]').click();await p.locator(`[data-action="ac:${k===2?'v33Swap':'v33Range'}"]`).click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' meter corrected '+i+'-'+k);}
+   else if(k===2){await p.locator('[data-action="ac:v33Start"][data-value="V₁|a"]').click();const key=await p.evaluate(()=>AdvancedCircuits.terminals(modelData.net,false).find(t=>t.node==='n1').key);await p.locator('[data-action="ac:v33Term"][data-value="'+key+'"]').click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' voltmeter lead moved '+i+'-'+k);}else{await p.locator('[data-v33-meter]').click();await p.locator('[data-action="ac:v33Range"]').click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' range corrected '+i+'-'+k);}
    await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>typeof experiments[page].editMsg==='string'&&experiments[page].editMsg.length>0),name+' check feedback '+i+'-'+k);
    await p.locator('[data-action="ac:undoEdit"]').click();check(await p.evaluate(()=>experiments[page].edits.length===0),name+' undo edit '+i+'-'+k);
-   await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.ac-compare svg').count()===2,name+' before-after '+i+'-'+k);
+   await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.p26-scene svg').count()===1&&await p.locator('.ac-compare').count()===0,name+' single teacher diagram '+i+'-'+k);
    await p.locator('#reset').click();continue;
   }
   if(i===26){
@@ -40,17 +40,19 @@ async function run(browser,name,viewport,mobile=false){const c=await browser.new
    await p.locator('#reset').click();continue;
   }
   if(i===27){
+   await p.locator('.p28-wire-hit').first().scrollIntoViewIfNeeded();
    const id=k===1?'危险短接':'旁路线',pt=await p.locator(`[data-v33-delete="${id}"] .p28-wire-hit`).evaluate(e=>{const svg=e.ownerSVGElement,z=svg.createSVGPoint(),p=e.getPointAtLength(e.getTotalLength()*.48);z.x=p.x;z.y=p.y;const r=z.matrixTransform(svg.getScreenCTM());return{x:r.x,y:r.y};});
    if(mobile){await p.touchscreen.tap(pt.x,pt.y);await p.locator('[data-action="ac:v33WireDelete"]').click();}else await p.mouse.click(pt.x,pt.y,{button:'right'});
    check(await p.evaluate(()=>experiments[page].edits.length===1),name+' wire deleted '+i+'-'+k);
-   if(k===2){await p.locator('[data-v33-meter="V₁"]').click();await p.locator('[data-action="ac:v33Swap"]').click();}
+   if(k===2){for(const [end,node] of [['a','n1'],['b','A0']]){await p.locator('[data-action="ac:v33Start"][data-value="V₁|'+end+'"]').click();const key=await p.evaluate(node=>AdvancedCircuits.terminals(modelData.net,false).find(t=>t.node===node).key,node);await p.locator('[data-action="ac:v33Term"][data-value="'+key+'"]').click();}}
    await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>experiments[page].editDone),name+' direct short correction '+i+'-'+k);
-   await p.locator('[data-action="ac:undoEdit"]').click();if(k===2)await p.locator('[data-action="ac:undoEdit"]').click();check(await p.evaluate(()=>experiments[page].edits.length===0),name+' undo edit '+i+'-'+k);
+   await p.locator('[data-action="ac:undoEdit"]').click();if(k===2){await p.locator('[data-action="ac:undoEdit"]').click();await p.locator('[data-action="ac:undoEdit"]').click();}check(await p.evaluate(()=>experiments[page].edits.length===0),name+' undo edit '+i+'-'+k);
    await p.locator('[data-action="ac:stdShow"]').click();check(await p.locator('.ac-compare svg').count()===2,name+' before-after '+i+'-'+k);
    await p.locator('#reset').click();continue;
   }
   if(i===28){check(await p.locator('[data-action="ac:p29hint"]').count()===1,name+' prior direct p29 preserved');await p.locator('#reset').click();continue;}
   if(i===29){
+   await p.locator('.p28-wire-hit').first().scrollIntoViewIfNeeded();
    const pt=await p.locator('[data-v33-delete="旁路线"] .p28-wire-hit').evaluate(e=>{const svg=e.ownerSVGElement,z=svg.createSVGPoint(),p=e.getPointAtLength(e.getTotalLength()*.48);z.x=p.x;z.y=p.y;const r=z.matrixTransform(svg.getScreenCTM());return{x:r.x,y:r.y};});
    if(mobile){await p.touchscreen.tap(pt.x,pt.y);await p.locator('[data-action="ac:v33WireDelete"]').click();}else await p.mouse.click(pt.x,pt.y,{button:'right'});
    check(await p.evaluate(()=>experiments[page].edits.length===1),name+' sole wire removed '+i);
@@ -60,8 +62,8 @@ async function run(browser,name,viewport,mobile=false){const c=await browser.new
    await p.locator('#reset').click();continue;
   }
   if(i===30){
-   await p.locator('[data-action="ac:v33Start"][data-value="A错|a"]').click();await p.locator('[data-action="ac:v33Term"][data-value="275,180"]').click();
-   await p.locator('[data-action="ac:v33Start"][data-value="A错|b"]').click();await p.locator('[data-action="ac:v33Term"][data-value="345,180"]').click();
+   await p.locator('[data-action="ac:v33Start"][data-value="A错|a"]').first().click();await p.locator('[data-action="ac:v33Term"][data-value="275,180"]').click();
+   await p.locator('[data-action="ac:v33Start"][data-value="A错|b"]').first().click();await p.locator('[data-action="ac:v33Term"][data-value="345,180"]').click();
    check(await p.evaluate(()=>experiments[page].edits.length===2&&Math.abs(modelData.total-1.1)<1e-6&&Math.abs(modelData.meter['A错']-.3)<1e-6),name+' real two-lead correction '+i);
    await p.locator('[data-action="ac:check"]').click();check(await p.evaluate(()=>experiments[page].editDone),name+' valid corrected topology '+i);
    await p.locator('[data-action="ac:undoEdit"]').click();check(await p.evaluate(()=>experiments[page].edits.length===1),name+' undo edit '+i);

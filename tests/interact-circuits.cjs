@@ -68,7 +68,7 @@ function check(c,edits){const {net}=errNet(c);const n2=A.applyEdits(net,edits);r
 // ---------- 二、改错：正确改法全部通过 ----------
 const goodEdits={
   ammeterParallel:net=>[mv('A错','a','b2b',net),mv('A错','b','b2c',net)],
-  voltmeterSeries:net=>[mv('V错','a','A0',net),mv('V错','b','n1',net)],
+  voltmeterSeries:net=>[mv('V错','a','A0',net),mv('V错','b','n1',net),{op:'bridgeGap'}],
   reverse:()=>[ {op:'swapMeter',edge:'V₁'} ],
   range:()=>[ {op:'chRange',edge:'A₀',value:3} ],
   switchPlace:net=>[mv('S1','a','P',net),mv('S1','b','M',net),mv('S₀','a','b1a',net),mv('S₀','b','b1b',net)],
