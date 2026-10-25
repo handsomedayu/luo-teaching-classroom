@@ -69,10 +69,10 @@ function circuitDrawing(s,p={},phase=0){
   if(b.kind==='wire')return segment(pts);
   const direction=vertical?Math.sign(z[1]-a[1]):Math.sign(z[0]-a[0]);const before=vertical?[x,y-direction*radius]:[x-direction*radius,y],after=vertical?[x,y+direction*radius]:[x+direction*radius,y];
   let wire=segment([...pts.slice(0,index+1),before])+segment([after,...pts.slice(index+1)]),symbol='';
-  if(b.kind==='switch')symbol=`<g transform="translate(${x} ${y})${vertical?' rotate(-90)':''}">${sw(0,0,b.value,b.id.replace('1','₁').replace('2','₂'))}</g>`;
+  if(b.kind==='switch'){const name=b.id.replace('1','₁').replace('2','₂');symbol=vertical?`<g transform="translate(${x} ${y}) rotate(-90)">${sw(0,0,b.value,'')}</g>`+tx(x-38,y+8,name,20):`<g transform="translate(${x} ${y})">${sw(0,0,b.value,name)}</g>`;}
   else if(b.kind==='open')symbol=dot(...before)+dot(...after)+tx(x+50,y,'断点',20);
   else if(b.kind==='ammeter'){
-   if(p.meter)symbol=meter(x,y,'A');else return segment(pts);
+   if(p.meter)symbol=meter(x,y,'A')+(parallel&&b.id!=='A'?tx(x,y-34,b.id.replace('1','₁').replace('2','₂'),20):'');else return segment(pts);
   }else{
    const on=b.id==='R1'?m.I1:m.I2;
    symbol=p.loadLamp?lamp(x,y,p.brightness??(on?.65:0))+tx(x+(vertical?-58:0),y+(vertical?8:-34),b.id.replace('R','L')):resistor(x,y,b.id.replace('1','₁').replace('2','₂'),vertical);
@@ -89,7 +89,11 @@ function circuitDrawing(s,p={},phase=0){
  }
  if(parallel)g+=dot(90,80)+dot(640,80)+dot(90,200)+dot(640,200)+tx(67,190,'A')+tx(667,190,'B');
  for(const [id,y,I]of parallel?[['current1',80,m.I1],['current2',200,m.I2]]:[['current1',80,m.I]])if(I)g+=arrow(405,y-30,450,y-30)+`<circle data-motion="${id}" cx="410" cy="${y}" r="5" fill="${teal}"/>`;
- return svg(g,'直流电路：'+s.mode)+'<p class="diagram-caption">'+(parallel?'A、B 为分流与汇流节点；A₁、A₂测各支路电流':single?'A 串联；V 跨接待测电阻两端':'V₁ 跨接 R₁；V₂ 跨接 R₂；A 串联')+'</p>';
+ const N1=p.loadLamp?'L₁':p.lampR1?'灯泡 L':'R₁',N2=p.loadLamp?'L₂':p.variable?'变阻器 R₂':'R₂';
+ const caption=parallel?(p.meter?'A、B 为节点；A₁、A₂ 测支路电流，两只 V 测支路电压':`A、B 为分流与汇流节点；${N1}、${N2} 各在一条支路上`)
+  :single?(p.meter?`A 串联在电路中；V 跨接 ${N1} 两端`:`电路中只有一个用电器 ${N1}`)
+  :p.meter?`A 串联在电路中；V₁ 跨接 ${N1}，V₂ 跨接 ${N2}`:`${N1}、${N2} 依次连接，只有一条电流路径`;
+ return svg(g,'直流电路：'+s.mode)+'<p class="diagram-caption">'+caption+'</p>';
 }
 function circuitScene(p,s,q){
  const m=Physics.circuit(s);let controls=[];
@@ -123,7 +127,7 @@ function renderModel(p,s,q){
  case 'symbols':result.picture=svg(battery(130,100,3)+sw(350,100,false)+lamp(580,100)+resistor(130,280)+meter(350,280,'A')+meter(580,280,'V')+tx(350,360,'连接线：直线转角清楚，连接处有实心节点',24));break;
  case 'current':result.picture=svg(path('M100 80H270 M350 80H650V290H395 M365 290H100V80')+resistor(310,80,'用电器')+battery(380,290,3)+arrow(440,50,510,50)+tx(520,30,'电流',23)+`<circle data-motion="electron-current" cx="${530-(q%1)*90}" cy="80" r="9" fill="${orange}"/>`+line(525,120,450,120,orange)+`<path d="M460 112L450 120L460 128" fill="none" stroke="${orange}" stroke-width="3"/>`+tx(490,160,'电子定向移动',23,orange)+tx(380,380,'外电路：电流与金属电子定向移动方向相反',23));break;
  case 'short':result.picture=svg(path('M130 100H630V290H395 M365 290H130V100')+battery(380,290,3)+tx(380,160,'没有用电器限制电流',30,orange)+tx(380,210,'电源短路：禁止实物尝试',30,orange));break;
- case 'nodes':result.picture=svg(path('M100 70H325 M355 70H620V270 M100 70V270 M100 170H300 M380 170H620 M100 270H300 M380 270H620')+battery(340,70,6)+resistor(340,170,'R₁')+resistor(340,270,'R₂')+dot(100,170)+dot(620,170)+tx(70,190,'A',28)+tx(660,190,'B',28)+tx(380,380,'A、B 之间两条负载支路；上方是电源支路',23));break;
+ case 'nodes':result.picture=svg(path('M100 60H325 M355 60H620V290 M100 60V290 M100 185H300 M380 185H620 M100 290H300 M380 290H620')+battery(340,60,6)+resistor(340,185,'R₁')+resistor(340,290,'R₂')+dot(100,185)+dot(620,185)+tx(70,205,'A',28)+tx(660,205,'B',28)+tx(380,380,'A、B 之间两条负载支路；上方是电源支路',23));break;
  case 'doorbell':result.picture=svg(path('M95 110H185 M235 110H325V230H185 M235 230H95V110 M325 170H460 M510 170H640V330H395 M365 330H95V170')+sw(210,110,q>=1,'S₁')+sw(210,230,q>=2,'S₂')+lamp(485,170,q>=1?.7:0)+battery(380,330,3)+dot(95,170)+dot(325,170)+tx(485,225,'门铃（负载示意）',22));break;
  case 'meter-error':{
   result.picture=svg(path('M65 100H157 M203 100H300V300H195 M165 300H65V100')+meter(180,100,'V')+battery(180,300,3)+tx(180,55,'错误：V 串入主回路',23,orange)+tx(180,200,'理想电压表使 I≈0',22)+path('M435 100H527 M573 100H690V300H575 M545 300H435V100')+meter(550,100,'A')+battery(560,300,3)+tx(555,55,'错误：A 直接跨电源',23,orange)+tx(555,200,'近似电源短路',25,orange)+tx(380,390,'错误接法辨析图，禁止按右图进行实物接线',23,orange));
@@ -164,18 +168,18 @@ function renderModel(p,s,q){
   result.picture=circuitDrawing(s2,{meter:true,variable:true},q);result.controls=range('r2','R₂ / Ω',s2.r2,0,20,.5);result.metrics=stats([['I≤0.4 A',fmt(m.I)+' A'],[p.currentOnly?'U₂（未加限制）':'U₂≤3 V',fmt(m.U2)+' V'],['是否同时满足',safe?'是':'否']]);result.data={...m,safe};break;}
  case 'lamp':{
   const U=s.lampU,I=Physics.lamp(U),P=U*I,R=I?U/I:0,Rp=I?(6-U)/I:Infinity;
-  result.picture=circuitDrawing({U:6,r1:R,r2:Rp,mode:'series',closed:true},{meter:true,variable:true,loadLamp:false},q).replace(resistor(320,80,'R₁'),lamp(320,80,P/.75)+line(280,80,295,80)+line(345,80,360,80));result.controls=range('lampU','调节灯泡电压 / V',U,.5,2.5,.1);result.metrics=stats([['灯 U',fmt(U)+' V'],['灯 I',fmt(I,3)+' A'],['灯 P',fmt(P,3)+' W'],['灯 R',fmt(R)+' Ω']]);result.caption='2.5 V、0.75 W灯泡的示例曲线；变阻器对应 '+fmt(Rp)+' Ω。';result.data={U,I,P,R,Rp};break;}
+  result.picture=circuitDrawing({U:6,r1:R,r2:Rp,mode:'series',closed:true},{meter:true,variable:true,loadLamp:false,lampR1:true},q).replace(resistor(320,80,'R₁'),lamp(320,80,P/.75)+line(280,80,295,80)+line(345,80,360,80));result.controls=range('lampU','调节灯泡电压 / V',U,.5,2.5,.1);result.metrics=stats([['灯 U',fmt(U)+' V'],['灯 I',fmt(I,3)+' A'],['灯 P',fmt(P,3)+' W'],['灯 R',fmt(R)+' Ω']]);result.caption='2.5 V、0.75 W灯泡的示例曲线；变阻器对应 '+fmt(Rp)+' Ω。';result.data={U,I,P,R,Rp};break;}
  case 'power':{
   const P=p.power||6,t=stage*(p.duration||60),W=P*t;result.picture=svg(`<rect x="100" y="110" width="560" height="70" fill="white" stroke="${ink}" stroke-width="3"/><rect x="103" y="113" data-motion="energy-bar" width="${554*stage}" height="64" fill="#b2d8cf"/>${tx(380,80,p.power?'1000 W × 720 s＝720000 J':'12 V × 0.5 A＝6 W',32)}<text data-motion="energy-time" x="380" y="240" text-anchor="middle" font-size="30"></text><text data-motion="energy-value" x="380" y="310" text-anchor="middle" font-size="36" fill="${teal}"></text>`);result.data={t,W,P};result.caption='恒定电压、电流的理想模型；累计能量随时间增加。';break;}
  case 'joule':{
   const mode=p.mode||'R',I1=.5,I2=mode==='I'?1:.5,R1=mode==='calc'?20:10,R2=mode==='R'?20:R1,t=stage*(mode==='calc'?120:60),Q1=Physics.heat(I1,R1,t),Q2=Physics.heat(I2,R2,t);let g='';
   for(const [x,I,R,Q,label]of [[200,I1,R1,Q1,'甲'],[560,I2,R2,Q2,'乙']]){let dh=Q/20;g+=`<path d="M${x-95} 125V330H${x+95}V125" fill="#edf7f5" stroke="${ink}" stroke-width="3"/><rect data-heat="${label}" x="${x+60}" y="${310-dh*4}" width="18" height="${dh*4}" fill="${orange}"/>`+resistor(x-20,235,R+' Ω')+path(`M${x-60} 235V110 M${x+20} 235V110`)+`<text data-heat-text="${label}" x="${x}" y="360" text-anchor="middle" font-size="24"></text>`+tx(x,390,label+': '+I+' A',22);}
-  if(mode==='R')g+=path('M140 110V50H365 M395 50H580V110 M220 110H500')+battery(380,50,I1*(R1+R2));
+  if(mode==='R')g+=path('M140 110V50H365 M395 50H580V110 M220 110H500')+battery(380,50,I1*(R1+R2)).replace('y="103"','y="14"');
   else for(const [x,U]of [[200,I1*R1],[560,I2*R2]])g+=path(`M${x-60} 110V50H${x-15} M${x+15} 50H${x+20}V110`)+battery(x,50,U);
   result.picture=svg(g);result.metrics=stats([['通电时间',fmt(t)+' s'],['Q甲',fmt(Q1)+' J'],['Q乙',fmt(Q2)+' J']]);result.caption=(mode==='R'?'同一串联回路':'独立低压回路')+'；等热容20 J/℃，忽略散热，时间压缩演示。';result.data={I1,I2,R1,R2,t,Q1,Q2};break;}
  case 'home':{
   const device=[1000,2100,3200][s.load],loads=device+(q>=1?100:0),I=loads/220;let g=line(100,70,145,70,orange)+line(290,70,680,70,orange)+line(100,320,650,320,ink)+line(100,365,700,365,teal)+tx(60,78,'L',26,orange)+tx(60,328,'N',26)+tx(60,373,'PE',24,teal);
-  g+=`<rect x="145" y="46" width="145" height="48" fill="white" stroke="${ink}" stroke-width="2"/>`+tx(218,77,'保护装置',22)+path('M360 70V120 M360 170V225 M360 275V320 M560 70V160 M560 240V320')+`<g transform="translate(360 145) rotate(90)">${sw(0,0,q>=1,'')}</g>`+lamp(360,250,q>=1?.7:0)+dot(360,70)+dot(360,320)+resistor(560,200,'用电器',true)+`<rect x="490" y="140" width="140" height="125" rx="12" fill="none" stroke="${teal}" stroke-width="3"/>`+line(630,220,700,220,teal)+line(700,220,700,365,teal)+dot(700,365)+tx(360,110,'火线开关',20)+tx(568,290,'金属外壳接PE',20,teal);
+  g+=`<rect x="145" y="46" width="145" height="48" fill="white" stroke="${ink}" stroke-width="2"/>`+tx(218,77,'保护装置',22)+path('M360 70V120 M360 170V225 M360 275V320 M560 70V160 M560 240V320')+`<g transform="translate(360 145) rotate(90)">${sw(0,0,q>=1,'')}</g>`+lamp(360,250,q>=1?.7:0)+dot(360,70)+dot(360,320)+resistor(560,200,'用电器',true)+`<rect x="490" y="140" width="140" height="125" rx="12" fill="none" stroke="${teal}" stroke-width="3"/>`+line(630,220,700,220,teal)+line(700,220,700,365,teal)+dot(700,365)+tx(332,128,'火线开关',20)+tx(568,290,'金属外壳接PE',20,teal);
   result.picture=svg(g);result.caption='灯100 W，右侧负荷'+device+' W；按纯电阻近似，PE不流工作电流。';if(p.control==='loads')result.controls=button('load','切换总负荷');result.metrics=stats([['近似电压','220 V'],['示例总功率',loads+' W'],['总电流（近似）',fmt(I)+' A']]);result.data={P:loads,I};break;}
  }
  return result;

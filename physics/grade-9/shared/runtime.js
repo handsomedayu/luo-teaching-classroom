@@ -35,9 +35,27 @@ function reveal(){
  const key=Math.floor(q());if(key!==revealKey){revealKey=key;document.querySelectorAll('[data-reveal]').forEach(e=>{const visible=q()>=Number(e.dataset.reveal);e.classList.toggle('pending',!visible);e.setAttribute('aria-hidden',!visible);});}sync();
 }
 function paintMotion(){updateMotion($('visual-picture'),lessons[page],experiments[page],q(),motionData);window.modelData=motionData;reveal();}
+// 图形自适应：若元件或标签画到了画布外（例如顶部的电压表），自动扩大可视范围，避免被裁掉
+function fitSvgs(root){
+ root.querySelectorAll('svg[viewBox]').forEach(el=>{
+  if(el.closest('[data-no-fit]'))return;
+  const base=el.dataset.baseViewBox||el.getAttribute('viewBox');el.dataset.baseViewBox=base;
+  const [x,y,w,h]=base.split(/[\s,]+/).map(Number);let b;try{b=el.getBBox();}catch{return;}
+  if(!b||!b.width)return;const pad=6,x1=Math.min(x,b.x-pad),y1=Math.min(y,b.y-pad),x2=Math.max(x+w,b.x+b.width+pad),y2=Math.max(y+h,b.y+b.height+pad);
+  const next=`${x1} ${y1} ${x2-x1} ${y2-y1}`;if(el.getAttribute('viewBox')!==next)el.setAttribute('viewBox',next);
+ });
+}
+// 触屏白板友好：导线、开关的线条只有 3px 宽，手指很难点中；给可点击的线条加一层透明的加宽触控区
+function padHits(root){
+ root.querySelectorAll('svg [data-action],svg [data-p23-wire],svg [data-p29-wire],svg [data-v33-wire],svg [data-v33-delete]').forEach(g=>{
+  if(g.tagName.toLowerCase()!=='g'||g.querySelector(':scope > .touch-pad,[class*="hit"]'))return;
+  const shapes=[...g.querySelectorAll('line,polyline,path')].filter(x=>!x.closest('text')&&x.getAttribute('stroke')!=='none'&&(x.getAttribute('fill')==='none'||x.tagName.toLowerCase()!=='path'||!x.getAttribute('fill')));
+  for(const x of shapes){const c=x.cloneNode(false);c.removeAttribute('class');c.removeAttribute('marker-end');c.setAttribute('class','touch-pad');c.setAttribute('stroke','transparent');c.setAttribute('stroke-width','22');c.setAttribute('fill','none');c.setAttribute('pointer-events','stroke');g.insertBefore(c,g.firstChild);}
+ });
+}
 function render(keepControls=false){
  const p=lessons[page],m=renderModel(p,experiments[page],continuous.has(p.scene)?0:q());motionData=m.data;
- html('visual-picture',m.picture);html('readings',m.metrics);setText('caption',m.caption);
+ html('visual-picture',m.picture);fitSvgs($('visual-picture'));padHits($('visual-picture'));html('readings',m.metrics);setText('caption',m.caption);
  if(!keepControls)html('experiment-controls',m.controls);
  paintMotion();
  if(panelMode==='experiment'&&$('panel').open)html('mobile-readings',$('readings').innerHTML);
@@ -46,7 +64,7 @@ function flushInput(){if(inputRaf){cancelAnimationFrame(inputRaf);inputRaf=0;ren
 function goto(i){
  flushInput();pause();revealKey=-1;page=Math.max(0,Math.min(lessons.length-1,i));const p=lessons[page];
  setText('title',p.title);setText('question',p.question);setText('section',`第 ${LESSON.number} 章 · ${LESSON.title}`);
- $('content').innerHTML='<div class="page split"><section class="visual"><div id="visual-picture"></div><div id="readings"></div><p id="caption" class="small"></p><div id="experiment-controls" class="experiment-controls"></div></section><section class="facts">'+p.steps.map((t,i)=>`<p class="fact" data-reveal="${i+1}">${t}</p>`).join('')+'<p class="ask">先预测 → 操作或分步观察 → 说明依据</p></section></div>';
+ $('content').innerHTML='<div class="page split'+(p.scene==='advanced-circuit'?' task-wide':'')+'"><section class="visual"><div id="visual-picture"></div><div id="readings"></div><p id="caption" class="small"></p><div id="experiment-controls" class="experiment-controls"></div></section><section class="facts">'+p.steps.map((t,i)=>`<p class="fact" data-reveal="${i+1}">${t}</p>`).join('')+'<p class="ask">先预测 → 操作或分步观察 → 说明依据</p></section></div>';
  setText('model-note',p.scene==='home'?'安全示意，不是施工图；不进行市电接线。':p.scene==='graph'||p.scene==='lamp'?'示例/理想数据，不是实际测量记录；实验仍须观察真实误差。':'教学简化模型；电源、导线与电表理想化，动态箭头不表示真实电子速度。');
  render();if(matchMedia('(max-width:700px) and (orientation:portrait)').matches)window.scrollTo(0,0);if($('panel').open)$('panel').close();$('toc').setAttribute('aria-expanded','false');
 }

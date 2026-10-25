@@ -5,3 +5,12 @@
 .visual:has(#experiment-controls:empty) #visual-picture:not(:has(.concept-flow)){height:310px}
 
 .visual:has([data-action="record"]) #visual-picture{height:215px}#caption,#readings,.experiment-controls{flex-shrink:0}
+
+/* 2026-10 修复：图示区占满实验面板剩余空间，避免图小、下方大片空白（各页原有最小高度保留） */
+.visual>#visual-picture{flex:1 1 auto;min-height:170px}
+/* 操作按钮/提示多时，操作区内部滚动，不再被底部说明文字盖住 */
+.visual>#experiment-controls{flex:0 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.visual>#visual-picture:has(.concept-flow){flex:none}
+
+/* 第3章互动连线/改错页：操作区更宽，按钮少换行、不被挤出 */
+.split.task-wide{grid-template-columns:1.75fr 1fr}
