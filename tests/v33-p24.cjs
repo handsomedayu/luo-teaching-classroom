@@ -1,0 +1,33 @@
+'use strict';
+const fs=require('fs'),path=require('path'),{chromium,webkit}=require('./browser.cjs');
+const root=path.resolve(__dirname,'../physics/grade-9/electricity-03'),out=path.resolve(__dirname,'../test-results/v33-p24');
+fs.mkdirSync(out,{recursive:true});const url='file:///'+root.replace(/\\/g,'/')+'/index.html',fail=[];let passed=0;
+const check=(ok,label)=>{if(ok)passed++;else fail.push(label);},near=(a,b)=>Number.isFinite(a)&&Math.abs(a-b)<1e-6;
+async function run(browser,name,viewport,touch=false){
+ const ctx=await browser.newContext({viewport,isMobile:touch,hasTouch:touch}),p=await ctx.newPage();await ctx.route(/^https?:/,r=>r.abort());
+ p.on('pageerror',e=>fail.push(name+' JS '+e.message));p.on('console',m=>{if(m.type()==='error')fail.push(name+' console '+m.text());});await p.goto(url);await p.evaluate(()=>goto(23));
+ const data=()=>p.evaluate(()=>({total:modelData.total,lit:modelData.lit,short:modelData.sourceShort,reading:modelData.reading,correct:modelData.correct,slide:modelData.slide,wires:experiments[page].p23Wires.map(w=>({...w})),caption:document.querySelector('#caption').textContent}));
+ const connect=async(a,b)=>{await p.locator(`[data-action="ac:p23Term"][data-value="${a}"]`).click();await p.locator(`[data-action="ac:p23Term"][data-value="${b}"]`).click();};
+ const wireHit=async(id)=>{const pos=await p.locator(`.p23-pane:nth-child(2) .p23-wire[data-p23-wire="${id}"] .p23-wire-hit`).evaluate(e=>{const s=e.ownerSVGElement,z=s.createSVGPoint(),pt=e.getPointAtLength(e.getTotalLength()/2);z.x=pt.x;z.y=pt.y;const q=z.matrixTransform(s.getScreenCTM());return{x:q.x,y:q.y};});if(touch)await p.touchscreen.tap(pos.x,pos.y);else await p.mouse.click(pos.x,pos.y,{button:'right'});};
+ let x=await data();check(x.wires.length===0&&near(x.total,0)&&x.reading===null,name+' blank circuit no current');
+ check(await p.locator('.p23-pane:first-child svg').count()===1&&await p.locator('.p23-pane:nth-child(2) .p23-wire').count()===0,name+' schematic visible answer hidden');
+ check(!(await p.locator('#readings').textContent()).trim(),name+' no invented reading');await p.screenshot({path:path.join(out,`initial-${name}.png`)});
+ await connect('P','N');x=await data();check(x.wires.length===0&&/危险/.test(x.caption),name+' source short blocked');
+ for(const [a,b]of [['P','AP'],['AN','L1A'],['L1B','RA'],['RC','N']])await connect(a,b);
+ x=await data();check(x.wires.length===4&&near(x.total,.3)&&near(x.reading,.3)&&x.lit.L1&&x.correct,name+' A/C complete R10 + L10 gives 0.30 A');
+ check(await p.locator('.p23-pane:nth-child(2) .p23-wire').count()===4&&await p.locator('.p23-segment.is-active').count()===1,name+' model wires and active segment visible');
+ await p.locator('[data-action="ac:p23Check"]').click();check(/接线正确/.test((await data()).caption),name+' check accepts valid topology');await p.screenshot({path:path.join(out,`correct-${name}.png`)});
+ for(let i=0;i<2;i++)await p.locator('[data-action="ac:p24Slide"][data-value="-5"]').click();x=await data();check(x.slide===0&&near(x.total,.6)&&near(x.reading,.6),name+' A/C slider left R0 gives 0.60 A');
+ for(let i=0;i<4;i++)await p.locator('[data-action="ac:p24Slide"][data-value="5"]').click();x=await data();check(x.slide===20&&near(x.total,.2)&&near(x.reading,.2),name+' A/C slider right R20 gives 0.20 A');
+ const w=x.wires.find(w=>w.a==='RC'&&w.b==='N');await wireHit(w.id);if(touch){check(await p.locator('.p23-pane:nth-child(2) .p23-wire.is-selected').count()===1,name+' touch selects wire');await p.locator('[data-action="ac:p23Delete"]').click();}
+ x=await data();check(x.wires.length===3&&near(x.total,0)&&!x.correct,name+' deleting rheostat lead opens circuit');await p.keyboard.press('Control+z');x=await data();check(x.wires.length===4&&near(x.total,.2)&&x.correct,name+' undo restores same physical circuit');
+ await p.locator('.p23-bulb').click({button:'right'});check((await data()).wires.length===4,name+' component right click cannot delete');
+ await p.locator('[data-action="ac:p23Reset"]').click();x=await data();check(x.wires.length===0&&x.slide===20&&near(x.total,0),name+' reset clears wires');
+ await p.locator('[data-action="ac:p24Slide"][data-value="-5"]').click();await p.locator('[data-action="ac:p24Slide"][data-value="-5"]').click();x=await data();check(x.slide===10,name+' slider can return middle');
+ for(const [a,b]of [['P','AP'],['AN','L1A'],['L1B','RA'],['RB','N']])await connect(a,b);x=await data();check(near(x.total,.2)&&!x.correct,name+' two lower posts act as fixed 20 ohm, rejected');await p.locator('[data-action="ac:p23Check"]').click();check(/一上一下/.test((await data()).caption),name+' bottom-bottom feedback');
+ await p.locator('[data-action="ac:p23Reset"]').click();for(const [a,b]of [['P','AP'],['AN','L1A'],['L1B','RD'],['RC','N']])await connect(a,b);x=await data();check(near(x.total,.6)&&!x.correct,name+' two upper posts bypass rheostat, rejected');
+ await p.locator('[data-action="ac:p23Reset"]').click();for(const [a,b]of [['P','AP'],['AN','L1A'],['L1B','RB'],['RD','N']])await connect(a,b);x=await data();check(x.correct&&near(x.total,.3),name+' B/D valid alternative at midpoint');await p.locator('[data-action="ac:p24Slide"][data-value="5"]').click();await p.locator('[data-action="ac:p24Slide"][data-value="5"]').click();x=await data();check(near(x.total,.6),name+' B/D current changes opposite to A/C');
+ await p.locator('[data-action="ac:p23Answer"]').click();check(await p.locator('.p23-pane:nth-child(2) .p23-wire.is-answer').count()===4,name+' teacher example only on request');await p.locator('[data-action="ac:p23Answer"]').click();check(await p.locator('.p23-pane:nth-child(2) .p23-wire.is-answer').count()===0,name+' returns student wiring');
+ const layout=await p.evaluate(()=>{const m=document.querySelector('#content').getBoundingClientRect(),v=document.querySelector('.visual').getBoundingClientRect(),b=document.querySelector('.p23-board').getBoundingClientRect();return v.bottom<=m.bottom+2&&b.right<=m.right+2&&document.documentElement.scrollWidth<=innerWidth;});check(layout,name+' viewport layout');await ctx.close();
+}
+(async()=>{const chrome=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});try{await run(chrome,'chrome-1920',{width:1920,height:1080});await run(chrome,'chrome-1366',{width:1366,height:768});}finally{await chrome.close();}const wk=await webkit.launch({headless:true});try{await run(wk,'webkit-touch-844',{width:844,height:390},true);}finally{await wk.close();}const report={passed,failed:fail.length,fail};fs.writeFileSync(path.join(out,'results.json'),JSON.stringify(report,null,2));console.log(report);if(fail.length)process.exitCode=1;})().catch(e=>{console.error(e);process.exitCode=1;});
