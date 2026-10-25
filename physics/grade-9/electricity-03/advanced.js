@@ -18,7 +18,7 @@ const AdvancedCircuits=(()=>{
    add(edge('导线'+k+'b','b'+k+'d','RT','wire',P(`520,${y}`,`650,${y}`,`650,${T}`)));
   }
   if(combo){add(edge('S3','b3c','b3d','switch',P('345,255','345,305','520,305','520,255'),{at:[430,305],labelBelow:true}));add(edge('S4','P','N','switch',P('100,350','55,350','55,390','695,390','695,350','650,350'),{at:[375,390],labelBelow:true}));}
-  if(volts){add(edge('V₁','b1c','b1d','voltmeter',P('345,105','345,45','520,45','520,105'),{at:[432,45],positive:'b1c',measure:'L1'}));add(edge('V₂','BT','RT','voltmeter',P('100,75','100,20','650,20','650,75'),{at:[585,20],positive:'BT',measure:'bus'}));}
+  if(volts){add(edge('V₁','b1c','b1d','voltmeter',P('345,105','345,36','520,36','520,105'),{at:[432,36],positive:'b1c',measure:'L1'}));add(edge('V₂','BT','RT','voltmeter',P('100,75','100,20','650,20','650,75'),{at:[585,20],positive:'BT',measure:'bus'}));}
   if(short==='source'||wrongA)add(edge(wrongA?'A错':'危险短接','P','N',wrongA?'ammeter':'wire',P('100,350','55,350','55,390','695,390','695,350','650,350'),wrongA?{at:[375,390],measure:'source'}:{}));
   return {edges:e,U:6,labels:{B:[100,T],N:[650,T]},kind:'parallel',count,warning:short==='source'||wrongA};
  }
